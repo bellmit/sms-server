@@ -10,7 +10,7 @@
  */
 package com.bim.marvel.feign;
 
-import com.bim.marvel.message.sms.AliSmsUtil;
+import com.bim.marvel.message.sms.dto.AliSmsRequestDTO;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -54,5 +54,5 @@ public interface AliSmsFeignController {
             notes = "查询用户反馈信息分页列表",
             protocols = "http,https", httpMethod = "GET")
     @GetMapping(value = SEND_ALI_SMS, produces = {MediaType.APPLICATION_JSON_VALUE})
-    ResponseEntity<Map> sendSmsFeign(AliSmsUtil.AliSmsRequestDTO aliSmsRequestDTO) throws Exception;
+    ResponseEntity<Map> sendSmsFeign(AliSmsRequestDTO aliSmsRequestDTO) throws Exception;
 }

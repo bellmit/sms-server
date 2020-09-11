@@ -8,11 +8,12 @@
  * <author>          <time>          <version>          <desc>
  * 作者姓名           修改时间           版本号              描述
  */
-package com.bim.marvel.message.sms;
+package com.bim.marvel.message.sms.util;
 
 import com.bim.marvel.common.util.SimpleConverter;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import com.bim.marvel.message.sms.dto.AliSmsRequestDTO;
+import com.bim.marvel.message.sms.entity.AliSmsConfig;
+import com.bim.marvel.message.sms.enums.SmsParam;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import java.io.UnsupportedEncodingException;
@@ -136,151 +137,11 @@ public class AliSmsUtil {
     }
 
     /**
-     * AliSmsConfig
-     */
-    @Data
-    @AllArgsConstructor
-    public static class AliSmsConfig {
-        /**
-         * accessKey
-         */
-        private String accessKey;
-
-        /**
-         * accessSecret
-         */
-        private String accessSecret;
-    }
-
-    /**
-     * AliSmsRequestDTO
-     */
-    @Data
-    public class AliSmsRequestDTO {
-
-        /**
-         * 号码
-         */
-        private String phoneNumbers;
-
-        /**
-         * 短信签名
-         */
-        private String signName;
-
-        /**
-         * 短信模板
-         */
-        private String templateCode;
-
-        /**
-         * 参数
-         */
-        private String templateParam;
-
-        /**
-         * 短信类型
-         */
-        private SmsTypeEnum smsTypeEnum;
-    }
-
-    /**
-     * 短信类型
-     */
-    enum SmsTypeEnum {
-        /**
-         * 验证码短信
-         */
-        ValidCodeSms,
-
-        /**
-         * 通知短信
-         */
-        NoticeSms;
-    }
-
-    /**
      * 日期
      * @return String 日期
      */
     private static String getDate() {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         return simpleDateFormat.format(Calendar.getInstance(new SimpleTimeZone(0, "GMT")).getTime());
-    }
-
-    /**
-     * 短信参数
-     */
-    enum SmsParam {
-        /**
-         * 阿里云短信参数
-         */
-        AliSms("HMAC-SHA1",
-                UUID.randomUUID().toString(),
-                "",
-                "1.0",
-                getDate(),
-                "XML",
-                "cn-hangzhou",
-                "2017-05-25",
-                "SendSms");
-
-        /**
-         * 短信参数 signatureMethod
-         */
-        private String signatureMethod;
-
-        /**
-         * 短信参数 signatureNonce
-         */
-        private String signatureNonce;
-
-        /**
-         * 短信参数 accessKeyId
-         */
-        private String accessKeyId;
-
-        /**
-         * 短信参数 signatureVersion
-         */
-        private String signatureVersion;
-
-        /**
-         * 短信参数 timestamp
-         */
-        private String timestamp;
-
-        /**
-         * 短信参数 format
-         */
-        private String format;
-
-        /**
-         * 短信参数 regionId
-         */
-        private String regionId;
-
-        /**
-         * 短信参数 version
-         */
-        private String version;
-
-        /**
-         * 短信参数 action
-         */
-        private String action;
-
-        SmsParam(String signatureMethod, String signatureNonce, String accessKeyId, String signatureVersion,
-                 String timestamp, String format, String regionId, String version, String action) {
-            signatureMethod = signatureMethod;
-            signatureNonce = signatureNonce;
-            accessKeyId = accessKeyId;
-            signatureVersion = signatureVersion;
-            timestamp = timestamp;
-            format = format;
-            regionId = regionId;
-            version = version;
-            action = action;
-        }
     }
 }
