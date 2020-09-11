@@ -66,6 +66,7 @@
         <module>marvel-message-dingtalk</module>
         <module>marvel-message-sms</module>
         <module>marvel-message-test</module>
+        <module>marvel-message-server</module>
     </modules>
     <dependencyManagement>
         <dependencies>
@@ -103,6 +104,11 @@
               <dependency>
                 <groupId>com.bim.marvel</groupId>
                 <artifactId>marvel-common-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+              <dependency>
+                <groupId>com.bim.marvel</groupId>
+                <artifactId>marvel-web-config</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <!-- spring-cloud-commons -->
@@ -151,6 +157,12 @@
                 <groupId>com.alibaba.cloud</groupId>
                 <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
                 <version>${spring.cloud.alibaba.version}</version>
+            </dependency>
+            <!--openfeign-->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-starter-openfeign</artifactId>
+                <version>${spring.cloud.starter.version}</version>
             </dependency>
             <!-- rocketmq-spring-boot-starter -->
             <dependency>

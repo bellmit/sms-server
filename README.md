@@ -16,7 +16,7 @@
 |  |
 │  ├─marvel-message-test--------------------------单元、集成测试服务
 |  |
-|  ├─marvel-message-web----------------------------对外服务层(Controller)
+|  ├─marvel-message-server----------------------------对外服务层(Controller)
 
 ```
 

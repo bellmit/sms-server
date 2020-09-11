@@ -1,0 +1,40 @@
+# oauth配置
+security:
+  oauth2:
+    resource:
+      prefer-token-info: false
+      jwt:
+        key-value: M3NvbmdzaHUuY29t
+      user-info-uri: http://${maven_docker.ip}:7001/seeker/api/user/userInfo
+    client:
+      client-id: middle
+      client-secret: 123456
+      access-token-uri: http://${maven_docker.ip}:7777/uaa/oauth/token
+      user-authorization-uri: http://${maven_docker.ip}:7777/uaa/oauth/authorize
+      grant-type: client_credentials
+
+#securityResource配置（即为spring-application-name,
+#  release-whitelist已有默认，此处可不设置，明细配置可参考local.yaml）
+resource:
+  application:
+    resource-id: marvel-middle-server
+
+# swagger配置
+springfox:
+  documentation:
+    swagger-ui:
+      #生产环境不应启用
+      enabled: true
+      base-url: /
+
+swagger:
+  enabled: false
+
+# 日志级别
+logging:
+  level:
+    root: info
+    com.ibatis: INFO
+    com.bim.marvel.middle.core.dao: DEBUG
+    com.baomidou.mybatisplus.core.mapper: DEBUG
+    com.bim.marvel.data.config.datasource: DEBUG
