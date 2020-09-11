@@ -25,7 +25,7 @@ spring:
         file-extension: yaml
 #        namespace: middle
       discovery:
-        enabled: false
+        enabled: true
 #        namespace: middle
         server-addr: ${maven_nacos.ip}:${maven_nacos.port}
 

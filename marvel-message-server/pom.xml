@@ -23,6 +23,10 @@
             <groupId>com.bim.marvel</groupId>
             <artifactId>marvel-web-config</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.bim.marvel</groupId>
+            <artifactId>marvel-message-sms</artifactId>
+        </dependency>
         <!--web-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
