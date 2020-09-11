@@ -11,6 +11,7 @@
 package com.bim.marvel.feign;
 
 import feign.Param;
+import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 
 /**
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.GetMapping;
  * @date 2020/9/11
  * @since 1.0.0
  */
+@FeignClient(name = "aliSms", url = "http://dysmsapi.aliyuncs.com")
 public interface AliSmsFeignClient {
 
     /**
