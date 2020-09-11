@@ -12,6 +12,7 @@ package com.bim.marvel.feign;
 
 import com.bim.marvel.message.sms.dto.AliSmsRequestDTO;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @since 1.0.0
  */
 @RestController
+@FeignClient(name = "aliSms", url = "http://dysmsapi.aliyuncs.com")
 public interface AliSmsFeignController {
 
     /**
