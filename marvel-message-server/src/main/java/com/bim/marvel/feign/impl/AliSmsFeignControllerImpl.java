@@ -56,7 +56,7 @@ public class AliSmsFeignControllerImpl implements AliSmsFeignController {
      * @param aliSmsRequestDTO 短信参数
      */
     @Override
-    public ResponseEntity<Map> sendSmsFeign(AliSmsRequestDTO aliSmsRequestDTO) throws Exception {
-        return AliSmsUtil.sendAliSms(aliSmsConfig, aliSmsRequestDTO);
+    public void sendSmsFeign(AliSmsRequestDTO aliSmsRequestDTO) throws Exception {
+        AliSmsUtil.sendAliSms(aliSmsConfig, aliSmsRequestDTO);
     }
 }

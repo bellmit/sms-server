@@ -14,8 +14,6 @@ import com.bim.marvel.common.util.SimpleConverter;
 import com.bim.marvel.message.sms.dto.AliSmsRequestDTO;
 import com.bim.marvel.message.sms.entity.AliSmsConfig;
 import com.bim.marvel.message.sms.enums.SmsParam;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -53,22 +51,15 @@ public class AliSmsUtil {
     private static final String ALI_SMS_REGION = "cn-hangzhou";
 
     /**
-     * RESTTEMPLATE
-     */
-    private static final RestTemplate RESTTEMPLATE = new RestTemplate();
-
-    /**
      * 发送短信
      *
      * @param aliSmsConfig 配置
      * @param aliSmsRequestDTO 参数
      * @exception Exception Exception
      */
-    public static ResponseEntity<Map> sendAliSms(AliSmsConfig aliSmsConfig, AliSmsRequestDTO aliSmsRequestDTO) throws Exception {
+    public static void sendAliSms(AliSmsConfig aliSmsConfig, AliSmsRequestDTO aliSmsRequestDTO) throws Exception {
         String urlParam = getAliSmsParam(aliSmsConfig, aliSmsRequestDTO);
         String urlSendAliSms = ALI_SMS_URL + "?Signature=" + sign(aliSmsConfig.getAccessSecret(), urlParam) + urlParam;
-        ResponseEntity<Map> responseEntity = RESTTEMPLATE.getForEntity(urlSendAliSms, Map.class);
-        return responseEntity;
     }
 
     /**
