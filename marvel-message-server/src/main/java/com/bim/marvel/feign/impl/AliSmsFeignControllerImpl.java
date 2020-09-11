@@ -15,8 +15,6 @@ import com.bim.marvel.message.sms.dto.AliSmsRequestDTO;
 import com.bim.marvel.message.sms.entity.AliSmsConfig;
 import com.bim.marvel.message.sms.util.AliSmsUtil;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
-import java.util.Map;
 
 /**
  * 〈阿里云短信平台controller〉

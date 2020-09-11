@@ -13,10 +13,8 @@ package com.bim.marvel.feign;
 import com.bim.marvel.message.sms.dto.AliSmsRequestDTO;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import java.util.Map;
 
 /**
  * 〈阿里云短信平台接口〉
