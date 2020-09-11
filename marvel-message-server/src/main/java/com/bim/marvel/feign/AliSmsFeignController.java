@@ -31,12 +31,12 @@ public interface AliSmsFeignController {
     /**
      * 阿里云accessKey
      */
-    String aliSmsAccessKey = "";
+    String ALI_SMS_ACCESS_KEY = "";
 
     /**
      * 阿里云accessSecret
      */
-    String aliSmsAccessSecret = "";
+    String ALI_SMS_ACCESS_SECRET = "";
 
     /**
      * 发送短信
@@ -46,6 +46,8 @@ public interface AliSmsFeignController {
     /**
      * 发送短信
      * @param aliSmsRequestDTO 短信参数
+     * @return ResponseEntity<Map> 返回短信发送结果
+     * @exception Exception 异常信息
      */
     @ApiOperation(
             value = "查询用户反馈信息分页列表",
