@@ -10,6 +10,8 @@
  */
 package com.bim.marvel.message.sms.enums;
 
+import com.bim.marvel.message.sms.entity.AliSmsConfig;
+
 /**
  * 〈短信类型〉
  *
@@ -18,13 +20,35 @@ package com.bim.marvel.message.sms.enums;
  * @since 1.0.0
  */
 public enum SmsTypeEnum {
+
     /**
      * 验证码短信
      */
-    ValidCodeSms,
+    SmsValidCode("1", "验证码短息", null),
 
     /**
      * 通知短信
      */
-    NoticeSms;
+    SmsNotice("2", "通知短信", null);
+
+    /**
+     * 值
+     */
+    private String value;
+
+    /**
+     * 描述
+     */
+    private String desc;
+
+    /**
+     * 短息配置参数
+     */
+    private AliSmsConfig aliSmsConfig;
+
+    SmsTypeEnum(String value, String desc, AliSmsConfig aliSmsConfig) {
+        this.value = value;
+        this.desc = desc;
+        this.aliSmsConfig = aliSmsConfig;
+    }
 }

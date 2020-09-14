@@ -1,35 +1,35 @@
 /*
  * Copyright (C), 2020, 安徽贝慕信息科技有限公司
- * FileName: AliSmsConfig
+ * FileName: AliSmsRequestDTO
  * Author:   xao
- * Date:     2020/9/11 17:06
- * Description: 阿里云短信配置
+ * Date:     2020/9/11 17:05
+ * Description: 阿里云短信参数
  * History:
  * <author>          <time>          <version>          <desc>
  * 作者姓名           修改时间           版本号              描述
  */
-package com.bim.marvel.message.sms.entity;
+package com.bim.marvel.message.sms.dto;
 
-import lombok.AllArgsConstructor;
+import com.bim.marvel.message.sms.enums.SmsEnum;
 import lombok.Data;
 
 /**
- * 〈阿里云短信配置〉
+ * 〈阿里云短信参数〉
  *
  * @author xao
  * @date 2020/9/11
  * @since 1.0.0
  */
 @Data
-@AllArgsConstructor
-public class AliSmsConfig {
-    /**
-     * accessKey
-     */
-    private String accessKey;
+public class AliSmsValidCodeDTO {
 
     /**
-     * accessSecret
+     * 号码
      */
-    private String accessSecret;
+    private String phoneNumbers;
+
+    /**
+     * smsEnum
+     */
+    private SmsEnum smsEnum;
 }

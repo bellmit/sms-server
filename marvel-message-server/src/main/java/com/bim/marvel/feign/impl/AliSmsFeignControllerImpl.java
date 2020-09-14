@@ -11,10 +11,12 @@
 package com.bim.marvel.feign.impl;
 
 import com.bim.marvel.feign.AliSmsFeignController;
-import com.bim.marvel.message.sms.dto.AliSmsRequestDTO;
+import com.bim.marvel.message.sms.dto.AliSmsNoticeDTO;
+import com.bim.marvel.message.sms.dto.AliSmsValidCodeDTO;
 import com.bim.marvel.message.sms.entity.AliSmsConfig;
 import com.bim.marvel.message.sms.util.AliSmsUtil;
 import org.springframework.beans.factory.annotation.Value;
+import javax.validation.Valid;
 
 /**
  * 〈阿里云短信平台controller〉
@@ -51,10 +53,23 @@ public class AliSmsFeignControllerImpl implements AliSmsFeignController {
 
     /**
      * 发送短信
-     * @param aliSmsRequestDTO 短信参数
+     *
+     * @param aliSmsNoticeDTO 短信参数
+     * @throws Exception Exception
      */
     @Override
-    public void sendSmsFeign(AliSmsRequestDTO aliSmsRequestDTO) throws Exception {
-        AliSmsUtil.sendAliSms(aliSmsConfig, aliSmsRequestDTO);
+    public void sendSmsFeign(AliSmsNoticeDTO aliSmsNoticeDTO) throws Exception {
+        AliSmsUtil.sendAliSmsNotice(aliSmsNoticeDTO, aliSmsNoticeDTO.getSmsEnum());
+    }
+
+    /**
+     * 发送短信
+     *
+     * @param aliSmsValidCodeDTO 短信参数
+     * @throws Exception Exception
+     */
+    @Override
+    public void sendSmsFeign(@Valid AliSmsValidCodeDTO aliSmsValidCodeDTO) throws Exception {
+        AliSmsUtil.sendAliSmsValidCode(aliSmsValidCodeDTO, aliSmsValidCodeDTO.getSmsEnum());
     }
 }

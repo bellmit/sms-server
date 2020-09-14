@@ -10,6 +10,7 @@
  */
 package com.bim.marvel.message.sms.dto;
 
+import com.bim.marvel.message.sms.enums.SmsEnum;
 import com.bim.marvel.message.sms.enums.SmsTypeEnum;
 import lombok.Data;
 
@@ -21,21 +22,12 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
-public class AliSmsRequestDTO {
+public class AliSmsNoticeDTO {
+
     /**
      * 号码
      */
     private String phoneNumbers;
-
-    /**
-     * 短信签名
-     */
-    private String signName;
-
-    /**
-     * 短信模板
-     */
-    private String templateCode;
 
     /**
      * 参数
@@ -43,7 +35,7 @@ public class AliSmsRequestDTO {
     private String templateParam;
 
     /**
-     * 短信类型
+     * smsEnum
      */
-    private SmsTypeEnum smsTypeEnum;
+    private SmsEnum smsEnum;
 }

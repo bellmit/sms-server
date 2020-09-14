@@ -1,0 +1,6 @@
+sms.ali:
+  accessKey: 123
+  accessSecret: 123
+  formatters:
+  - { id: 1, signName: 123, templateCode: 123, templateParam: 123, validCodeSize: 4 }
+  - { id: 2, signName: 123, templateCode: 123, templateParam: 123, validCodeSize: 6 }

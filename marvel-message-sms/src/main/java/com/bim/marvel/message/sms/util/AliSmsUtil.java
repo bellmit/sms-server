@@ -11,9 +11,11 @@
 package com.bim.marvel.message.sms.util;
 
 import com.bim.marvel.common.util.SimpleConverter;
-import com.bim.marvel.message.sms.dto.AliSmsRequestDTO;
-import com.bim.marvel.message.sms.entity.AliSmsConfig;
-import com.bim.marvel.message.sms.enums.SmsParam;
+import com.bim.marvel.message.sms.config.AliSmsConfig;
+import com.bim.marvel.message.sms.dto.AliSmsNoticeDTO;
+import com.bim.marvel.message.sms.dto.AliSmsValidCodeDTO;
+import com.bim.marvel.message.sms.enums.SmsEnum;
+import com.bim.marvel.message.sms.query.AliSmsQuery;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -31,47 +33,62 @@ import java.util.*;
 public class AliSmsUtil {
 
     /**
-     * 短信平台
-     */
-    private static final String RESPONSE_CODE = "OK";
-
-    /**
-     * ALI_SMS_PRODUCT
-     */
-    private static final String ALI_SMS_PRODUCT = "Dysmsapi";
-
-    /**
-     * ALI_SMS_URL
-     */
-    private static final String ALI_SMS_URL = "http://dysmsapi.aliyuncs.com";
-
-    /**
-     * ALI_SMS_REGION
-     */
-    private static final String ALI_SMS_REGION = "cn-hangzhou";
-
-    /**
-     * 发送短信
+     * 短信验证码
      *
      * @param aliSmsConfig 配置
-     * @param aliSmsRequestDTO 参数
+     * @param aliSmsQuery 参数
      * @exception Exception Exception
      */
-    public static void sendAliSms(AliSmsConfig aliSmsConfig, AliSmsRequestDTO aliSmsRequestDTO) throws Exception {
-        String urlParam = getAliSmsParam(aliSmsConfig, aliSmsRequestDTO);
-        String urlSendAliSms = ALI_SMS_URL + "?Signature=" + sign(aliSmsConfig.getAccessSecret(), urlParam) + urlParam;
+    private static void sendAliSmsValidCode(AliSmsConfig aliSmsConfig, AliSmsQuery aliSmsQuery) throws Exception {
+        String urlParam = getAliSmsParam(aliSmsConfig, aliSmsQuery);
+        String urlSendAliSms = AliSmsConfig.ALI_SMS_URL + "?Signature=" + sign(aliSmsConfig.getAccessSecret(), urlParam) + urlParam;
+    }
+
+    /**
+     * 短信验证码
+     *
+     * @param aliSmsValidCodeDTO 短信参数
+     * @param smsEnum 短信类型
+     * @throws Exception Exception
+     */
+    public static void sendAliSmsValidCode(AliSmsValidCodeDTO aliSmsValidCodeDTO, SmsEnum smsEnum) throws Exception {
+        AliSmsQuery aliSmsQuery = AliSmsFactory.getAliSmsQueryByType(smsEnum);
+        aliSmsQuery.setPhone(aliSmsValidCodeDTO.getPhoneNumbers());
+        sendAliSmsValidCode(aliSmsQuery.getAliSmsConfig(), aliSmsQuery);
+    }
+
+    /**
+     * 短信通知
+     *
+     * @param aliSmsNoticeDTO 短信参数
+     * @param smsEnum 短信类型
+     * @throws Exception Exception
+     */
+    public static void sendAliSmsNotice(AliSmsNoticeDTO aliSmsNoticeDTO, SmsEnum smsEnum) throws Exception {
+        AliSmsQuery aliSmsQuery = AliSmsFactory.getAliSmsQueryByType(smsEnum);
+        aliSmsQuery.setPhone(aliSmsNoticeDTO.getPhoneNumbers());
+        aliSmsQuery.setTemplateParam(aliSmsNoticeDTO.getTemplateParam());
+        sendAliSmsValidCode(aliSmsQuery.getAliSmsConfig(), aliSmsQuery);
+    }
+
+    /**
+     * 验证参数格式
+     *
+     * @param templateParam 短信模板参数
+     */
+    public static void validateTemplateParam(String templateParam) {
     }
 
     /**
      * getAliSmsParam
+     *
      * @param aliSmsConfig 配置
-     * @param aliSmsRequestDTO 参数
+     * @param aliSmsQuery 参数
      * @return String 参数
      * @throws Exception Exception
      */
-    public static String getAliSmsParam(AliSmsConfig aliSmsConfig, AliSmsRequestDTO aliSmsRequestDTO) throws Exception {
-        SmsParam smsParam = SmsParam.AliSms;
-        Map smsParamMap = SimpleConverter.convert(smsParam, TreeMap.class);
+    public static String getAliSmsParam(AliSmsConfig aliSmsConfig, AliSmsQuery aliSmsQuery) throws Exception {
+        Map smsParamMap = SimpleConverter.convert(aliSmsQuery, TreeMap.class);
         Map aliSmsConfigMap = SimpleConverter.convert(aliSmsConfig, TreeMap.class);
         smsParamMap.putAll(aliSmsConfigMap);
         return urlParam(smsParamMap);
@@ -79,6 +96,7 @@ public class AliSmsUtil {
 
     /**
      * urlParam
+     *
      * @param map 参数
      * @return String urlParam
      * @throws Exception Exception
@@ -119,6 +137,7 @@ public class AliSmsUtil {
 
     /**
      * urlEncode
+     *
      * @param param 参数
      * @return String urlEncode
      * @throws Exception Exception
@@ -129,6 +148,7 @@ public class AliSmsUtil {
 
     /**
      * 日期
+     *
      * @return String 日期
      */
     private static String getDate() {
