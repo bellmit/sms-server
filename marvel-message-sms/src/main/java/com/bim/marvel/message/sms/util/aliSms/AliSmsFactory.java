@@ -8,7 +8,7 @@
  * <author>          <time>          <version>          <desc>
  * 作者姓名           修改时间           版本号              描述
  */
-package com.bim.marvel.message.sms.util;
+package com.bim.marvel.message.sms.util.aliSms;
 
 import com.bim.marvel.message.sms.enums.SmsEnum;
 import com.bim.marvel.message.sms.query.AliSmsQuery;
@@ -27,11 +27,16 @@ public class AliSmsFactory {
     private static final Map<SmsEnum, AliSmsQuery> ALI_SMS_TYPE_MAP = new HashMap();
 
     /**
+     * ALI_SMS_MAP
+     */
+    private static final Map<SmsEnum, AliSms> ALI_SMS_MAP = new HashMap();
+
+    /**
      * getSmsByType
      * @param smsEnum
      * @return
      */
-    public static AliSmsQuery getAliSmsQueryByType(SmsEnum smsEnum){
+    public static AliSmsQuery getAliSmsQuery(SmsEnum smsEnum){
         AliSmsQuery aliSmsQuery = ALI_SMS_TYPE_MAP.get(smsEnum);
         return aliSmsQuery;
     }
@@ -43,5 +48,14 @@ public class AliSmsFactory {
      */
     public static void putAliSmsQuery(SmsEnum smsEnum, AliSmsQuery aliSmsQuery){
         ALI_SMS_TYPE_MAP.put(smsEnum, aliSmsQuery);
+    }
+
+    /**
+     * getSms
+     *
+     * @param id smsId
+     */
+    public void getSms(String id){
+        ALI_SMS_MAP.get(id);
     }
 }

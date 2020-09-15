@@ -27,7 +27,7 @@ import java.io.Serializable;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AliSmsQuery implements Serializable {
+public class AliSmsQuery extends SmsQuery implements Serializable {
 
     /**
      * 短信参数 signatureNonce
@@ -48,11 +48,6 @@ public class AliSmsQuery implements Serializable {
      * 短信参数 version
      */
     private String version;
-
-    /**
-     * 号码
-     */
-    private String phone;
 
     /**
      * 短信签名

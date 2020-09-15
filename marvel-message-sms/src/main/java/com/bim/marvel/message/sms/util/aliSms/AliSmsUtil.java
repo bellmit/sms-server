@@ -8,7 +8,7 @@
  * <author>          <time>          <version>          <desc>
  * 作者姓名           修改时间           版本号              描述
  */
-package com.bim.marvel.message.sms.util;
+package com.bim.marvel.message.sms.util.aliSms;
 
 import com.bim.marvel.common.util.SimpleConverter;
 import com.bim.marvel.message.sms.config.AliSmsConfig;
@@ -52,7 +52,7 @@ public class AliSmsUtil {
      * @throws Exception Exception
      */
     public static void sendAliSmsValidCode(AliSmsValidCodeDTO aliSmsValidCodeDTO, SmsEnum smsEnum) throws Exception {
-        AliSmsQuery aliSmsQuery = AliSmsFactory.getAliSmsQueryByType(smsEnum);
+        AliSmsQuery aliSmsQuery = AliSmsFactory.getAliSmsQuery(smsEnum);
         aliSmsQuery.setPhone(aliSmsValidCodeDTO.getPhoneNumbers());
         sendAliSmsValidCode(aliSmsQuery.getAliSmsConfig(), aliSmsQuery);
     }
@@ -65,7 +65,7 @@ public class AliSmsUtil {
      * @throws Exception Exception
      */
     public static void sendAliSmsNotice(AliSmsNoticeDTO aliSmsNoticeDTO, SmsEnum smsEnum) throws Exception {
-        AliSmsQuery aliSmsQuery = AliSmsFactory.getAliSmsQueryByType(smsEnum);
+        AliSmsQuery aliSmsQuery = AliSmsFactory.getAliSmsQuery(smsEnum);
         aliSmsQuery.setPhone(aliSmsNoticeDTO.getPhoneNumbers());
         aliSmsQuery.setTemplateParam(aliSmsNoticeDTO.getTemplateParam());
         sendAliSmsValidCode(aliSmsQuery.getAliSmsConfig(), aliSmsQuery);

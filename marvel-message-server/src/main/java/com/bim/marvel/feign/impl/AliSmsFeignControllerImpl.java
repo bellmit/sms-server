@@ -13,7 +13,7 @@ package com.bim.marvel.feign.impl;
 import com.bim.marvel.feign.AliSmsFeignController;
 import com.bim.marvel.message.sms.dto.AliSmsNoticeDTO;
 import com.bim.marvel.message.sms.dto.AliSmsValidCodeDTO;
-import com.bim.marvel.message.sms.util.AliSmsUtil;
+import com.bim.marvel.message.sms.util.aliSms.AliSmsUtil;
 import javax.validation.Valid;
 
 /**

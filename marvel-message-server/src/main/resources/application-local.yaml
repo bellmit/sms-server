@@ -81,13 +81,18 @@ ribbon:
   ReadTimeout: 10000
   ConnectTimeout: 10000
 
+
+
+
 #短信服务配置
 sms:
+  log:
+    mongodb:
+      enabled: true
+      url: //122.51.184.243:27017/admin
   aliSms:
     accessKey: 123
     accessSecret: 123
     formatters:
       - { id: 1, signName: 123, templateCode: 123, templateParam: 123, validCodeSize: 4 }
       - { id: 2, signName: 123, templateCode: 123, templateParam: 123, validCodeSize: 6 }
-
-

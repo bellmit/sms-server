@@ -12,7 +12,9 @@ package com.bim.marvel.message.sms.config;
 
 import com.bim.marvel.message.sms.enums.SmsEnum;
 import com.bim.marvel.message.sms.query.AliSmsQuery;
-import com.bim.marvel.message.sms.util.AliSmsFactory;
+import com.bim.marvel.message.sms.util.MongodbLog;
+import com.bim.marvel.message.sms.util.SmsLog;
+import com.bim.marvel.message.sms.util.aliSms.AliSmsFactory;
 import lombok.Data;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +32,7 @@ import java.util.stream.Collectors;
 @Data
 @Configuration
 @ConfigurationProperties(prefix = "sms.ali")
-public class AliSmsConfig extends CommonSmsConfig implements InitializingBean {
+public class AliSmsConfig extends SmsConfig implements InitializingBean {
 
     /**
      * aliSmsConfig
@@ -103,6 +105,11 @@ public class AliSmsConfig extends CommonSmsConfig implements InitializingBean {
      */
     private List<Map<String, String>> formatters;
 
+    /**
+     * smsLogList
+     */
+    private List<SmsLog> smsLogList;
+
     @Override
     public void afterPropertiesSet() throws Exception {
         Arrays.asList(SmsEnum.values()).stream().forEach(v -> {
@@ -115,6 +122,9 @@ public class AliSmsConfig extends CommonSmsConfig implements InitializingBean {
                 setAliSmsConfig(aliSmsConfig);
             }};
             AliSmsFactory.putAliSmsQuery(v, aliSmsQuery);
+            if(getLogMongodbEnable()) {
+                smsLogList.add(new MongodbLog(getLogMongodbUrl(), mongoTemplate));
+            }
         });
     }
 }
