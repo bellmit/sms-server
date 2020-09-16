@@ -10,7 +10,6 @@
  */
 package com.bim.marvel.message.sms.enums;
 
-import com.bim.marvel.message.sms.util.MongodbLog;
 import com.bim.marvel.message.sms.util.SmsLog;
 
 /**
@@ -31,6 +30,22 @@ public enum SmsLogEnum {
 
     SmsLogEnum(String value, SmsLog smsLog) {
         this.value = value;
+        this.smsLog = smsLog;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
+    }
+
+    public SmsLog getSmsLog() {
+        return smsLog;
+    }
+
+    public void setSmsLog(SmsLog smsLog) {
         this.smsLog = smsLog;
     }
 }

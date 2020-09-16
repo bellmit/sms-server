@@ -87,12 +87,31 @@ ribbon:
 #短信服务配置
 sms:
   log:
+    mode: mongodb
     mongodb:
       enabled: true
       url: //122.51.184.243:27017/admin
+  mq:
+    mode: rabbitmq
+    rabbitmq:
+      host: 122.51.184.243
+      port: 5672
+      username: sms
+      password: sms
+      virtualhost: dev
+      queue:
+        log: LOG
+        retrieve: RETRIEVE
+        query: QUERY
+      exchange:
+        direct:
+          retrieve: RETRIEVE
+          query: QUERY
+        topic:
+          log: LOG
   aliSms:
-    accessKey: 123
-    accessSecret: 123
+    accessKey: accessKey
+    accessSecret: accessSecret
     formatters:
       - { id: 1, signName: 123, templateCode: 123, templateParam: 123, validCodeSize: 4 }
       - { id: 2, signName: 123, templateCode: 123, templateParam: 123, validCodeSize: 6 }

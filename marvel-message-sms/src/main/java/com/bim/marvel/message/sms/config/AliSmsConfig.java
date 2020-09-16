@@ -93,7 +93,7 @@ public class AliSmsConfig extends SmsConfig implements InitializingBean {
     /**
      * 短信参数 format
      */
-    private String format = "XML";
+    private String format = "json";
 
     /**
      * 短信参数 action
@@ -123,8 +123,9 @@ public class AliSmsConfig extends SmsConfig implements InitializingBean {
             }};
             AliSmsFactory.putAliSmsQuery(v, aliSmsQuery);
             if(getLogMongodbEnable()) {
-                smsLogList.add(new MongodbLog(getLogMongodbUrl(), mongoTemplate));
+                smsLogList.add(new MongodbLog(getLogMongodbUrl(), mongoTemplate()));
             }
         });
+        getLogList();
     }
 }

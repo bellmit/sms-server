@@ -13,7 +13,9 @@ package com.bim.marvel.feign.impl;
 import com.bim.marvel.feign.AliSmsFeignController;
 import com.bim.marvel.message.sms.dto.AliSmsNoticeDTO;
 import com.bim.marvel.message.sms.dto.AliSmsValidCodeDTO;
-import com.bim.marvel.message.sms.util.aliSms.AliSmsUtil;
+import com.bim.marvel.message.sms.enums.SmsEnum;
+import com.bim.marvel.message.sms.client.SmsRequestClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import javax.validation.Valid;
 
 /**
@@ -26,6 +28,12 @@ import javax.validation.Valid;
 public class AliSmsFeignControllerImpl implements AliSmsFeignController {
 
     /**
+     * smsRequestClient
+     */
+    @Autowired
+    private SmsRequestClient smsRequestClient;
+
+    /**
      * 发送短信
      *
      * @param aliSmsNoticeDTO 短信参数
@@ -33,7 +41,7 @@ public class AliSmsFeignControllerImpl implements AliSmsFeignController {
      */
     @Override
     public void sendSmsFeign(AliSmsNoticeDTO aliSmsNoticeDTO) throws Exception {
-        AliSmsUtil.sendAliSmsNotice(aliSmsNoticeDTO, aliSmsNoticeDTO.getSmsEnum());
+        smsRequestClient.sendSmsNotice(SmsEnum.Valid_Code_Sms_01, aliSmsNoticeDTO);
     }
 
     /**
@@ -44,6 +52,6 @@ public class AliSmsFeignControllerImpl implements AliSmsFeignController {
      */
     @Override
     public void sendSmsFeign(@Valid AliSmsValidCodeDTO aliSmsValidCodeDTO) throws Exception {
-        AliSmsUtil.sendAliSmsValidCode(aliSmsValidCodeDTO, aliSmsValidCodeDTO.getSmsEnum());
+        smsRequestClient.sendSmsValidCode(SmsEnum.Valid_Code_Sms_02, aliSmsValidCodeDTO);
     }
 }
