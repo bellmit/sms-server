@@ -25,7 +25,6 @@ import javax.validation.Valid;
  * @date 2020/9/11
  * @since 1.0.0
  */
-@RestController
 public interface AliSmsFeignController {
 
     /**
@@ -50,7 +49,7 @@ public interface AliSmsFeignController {
             notes = "发送通知短信",
             protocols = "http,https", httpMethod = "GET")
     @GetMapping(value = SEND_ALI_SMS_NOTICE, produces = {MediaType.APPLICATION_JSON_VALUE})
-    void sendSmsFeign(@Valid AliSmsNoticeDTO aliSmsNoticeDTO) throws Exception;
+    void sendSmsFeign() throws Exception;
 
     /**
      * 发送验证码短信

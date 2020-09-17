@@ -20,6 +20,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -29,9 +30,8 @@ import java.util.stream.Collectors;
  * 阿里短信配置
  * @author xao
  */
-@Data
 @Configuration
-@ConfigurationProperties(prefix = "sms.ali")
+@ConfigurationProperties(prefix = "sms.alisms")
 public class AliSmsConfig extends SmsConfig implements InitializingBean {
 
     /**
@@ -105,11 +105,6 @@ public class AliSmsConfig extends SmsConfig implements InitializingBean {
      */
     private List<Map<String, String>> formatters;
 
-    /**
-     * smsLogList
-     */
-    private List<SmsLog> smsLogList;
-
     @Override
     public void afterPropertiesSet() throws Exception {
         Arrays.asList(SmsEnum.values()).stream().forEach(v -> {
@@ -122,10 +117,107 @@ public class AliSmsConfig extends SmsConfig implements InitializingBean {
                 setAliSmsConfig(aliSmsConfig);
             }};
             AliSmsFactory.putAliSmsQuery(v, aliSmsQuery);
-            if(getLogMongodbEnable()) {
-                smsLogList.add(new MongodbLog(getLogMongodbUrl(), mongoTemplate()));
-            }
         });
-        getLogList();
+        setLogList();
+    }
+
+    public AliSmsConfig getAliSmsConfig() {
+        return aliSmsConfig;
+    }
+
+    public void setAliSmsConfig(AliSmsConfig aliSmsConfig) {
+        this.aliSmsConfig = aliSmsConfig;
+    }
+
+    public static String getResponseCode() {
+        return RESPONSE_CODE;
+    }
+
+    public static String getAliSmsProduct() {
+        return ALI_SMS_PRODUCT;
+    }
+
+    public static String getAliSmsUrl() {
+        return ALI_SMS_URL;
+    }
+
+    public String getAccessKey() {
+        return accessKey;
+    }
+
+    public void setAccessKey(String accessKey) {
+        this.accessKey = accessKey;
+    }
+
+    public String getAccessSecret() {
+        return accessSecret;
+    }
+
+    public void setAccessSecret(String accessSecret) {
+        this.accessSecret = accessSecret;
+    }
+
+    public String getSignatureMethod() {
+        return signatureMethod;
+    }
+
+    public void setSignatureMethod(String signatureMethod) {
+        this.signatureMethod = signatureMethod;
+    }
+
+    public String getAccessKeyId() {
+        return accessKeyId;
+    }
+
+    public void setAccessKeyId(String accessKeyId) {
+        this.accessKeyId = accessKeyId;
+    }
+
+    public String getSignatureVersion() {
+        return signatureVersion;
+    }
+
+    public void setSignatureVersion(String signatureVersion) {
+        this.signatureVersion = signatureVersion;
+    }
+
+    public String getRegionId() {
+        return regionId;
+    }
+
+    public void setRegionId(String regionId) {
+        this.regionId = regionId;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public String getFormat() {
+        return format;
+    }
+
+    public void setFormat(String format) {
+        this.format = format;
+    }
+
+    public String getAction() {
+        return action;
+    }
+
+    public void setAction(String action) {
+        this.action = action;
+    }
+
+    public List<Map<String, String>> getFormatters() {
+        return formatters;
+    }
+
+    public void setFormatters(List<Map<String, String>> formatters) {
+        this.formatters = formatters;
     }
 }

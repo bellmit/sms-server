@@ -108,7 +108,7 @@ public class ProxyFactory {
         }
 
         public ProxyFactory.ProxyEntry getProxy(Method method) {
-            return Arrays.asList(proxyEntry).stream().filter(v->v.getMethod() == method).collect(Collectors.toList()).get(0);
+            return Arrays.asList(proxyEntry).stream().filter(v->v.getMethod().getName() == method.getName()).collect(Collectors.toList()).get(0);
         }
 
         public T genProxy() {

@@ -13,6 +13,7 @@ package com.bim.marvel.message.sms.client;
 import com.bim.marvel.message.sms.dto.AliSmsNoticeDTO;
 import com.bim.marvel.message.sms.dto.AliSmsValidCodeDTO;
 import com.bim.marvel.message.sms.enums.SmsEnum;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * SmsUser
@@ -21,6 +22,7 @@ import com.bim.marvel.message.sms.enums.SmsEnum;
  * @date 2020/9/15
  * @since 1.0.0
  */
+@Slf4j
 public class SmsUser implements SmsRequestClient{
 
     /**
@@ -30,6 +32,7 @@ public class SmsUser implements SmsRequestClient{
      */
     @Override
     public void sendSmsNotice(SmsEnum smsEnum, AliSmsNoticeDTO aliSmsNoticeDTO) {
+        log.info("sendSmsNotice");
     }
 
     /**

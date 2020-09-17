@@ -12,9 +12,10 @@ package com.bim.marvel.message.sms.util;
 
 import com.bim.marvel.message.sms.query.LogPageQuery;
 import com.bim.marvel.message.sms.query.LogSaveQuery;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
 
 /**
  * MongodbLog
@@ -24,7 +25,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
  * @since 1.0.0
  */
 @Data
-@NoArgsConstructor
+@AllArgsConstructor
 public class MongodbLog implements SmsLog {
 
     /**
@@ -37,9 +38,10 @@ public class MongodbLog implements SmsLog {
      */
     private MongoTemplate mongoTemplate;
 
-    public MongodbLog(String url, MongoTemplate mongoTemplate) {
+    public MongodbLog(String url) {
         this.url = url;
-        this.mongoTemplate = mongoTemplate;
+        SimpleMongoClientDbFactory mongoDbFactory = new SimpleMongoClientDbFactory(url);
+        mongoTemplate = new MongoTemplate(mongoDbFactory);
     }
 
     /**

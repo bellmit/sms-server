@@ -90,7 +90,7 @@ sms:
     mode: mongodb
     mongodb:
       enabled: true
-      url: //122.51.184.243:27017/admin
+      url: mongodb://122.51.184.243:27017/admin
   mq:
     mode: rabbitmq
     rabbitmq:
@@ -98,7 +98,7 @@ sms:
       port: 5672
       username: sms
       password: sms
-      virtualhost: dev
+      virtualhost: sms
       queue:
         log: LOG
         retrieve: RETRIEVE
@@ -109,7 +109,7 @@ sms:
           query: QUERY
         topic:
           log: LOG
-  aliSms:
+  alisms:
     accessKey: accessKey
     accessSecret: accessSecret
     formatters:

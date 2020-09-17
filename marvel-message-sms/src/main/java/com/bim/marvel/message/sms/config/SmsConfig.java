@@ -24,14 +24,18 @@ import com.bim.marvel.message.sms.util.ProxyFactory;
 import com.bim.marvel.message.sms.util.SmsLog;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -50,76 +54,79 @@ import java.util.List;
  * 记录日志
  * 异常处理
  */
-@Data
 @Configuration
-@ConfigurationProperties(prefix = "sms")
 @Slf4j
-public class SmsConfig {
+public class SmsConfig implements ApplicationContextAware {
+
+    /**
+     * applicationContext
+     */
+    private ApplicationContext applicationContext;
 
     /**
      * logMode
      */
-    @Value("log.mode")
+    @Value("${sms.log.mode}")
     private String logMode;
 
     /**
      * mongodbEnable
      */
-    @Value("log.mongodb.enabled")
+    @Value("${sms.log.mongodb.enabled}")
     private Boolean logMongodbEnable;
 
     /**
      * mongodbUrl
      */
-    @Value("log.mongodb.url")
+    @Value("${sms.log.mongodb.url}")
     private String logMongodbUrl;
 
     /**
      * mqMode
      */
-    @Value("${mq.mode}")
+    @Value("${sms.mq.mode}")
     private String mqMode;
 
     /**
      * rabbitmqHost
      */
-    @Value("${mq.rabbitmq.host}")
+    @Value("${sms.mq.rabbitmq.host}")
     private String rabbitmqHost;
 
     /**
      * rabbitmqPort
      */
-    @Value("${mq.rabbitmq.port}")
+    @Value("${sms.mq.rabbitmq.port}")
     private String rabbitmqPort;
 
-    @Value("${mq.rabbitmq.virtualhost}")
+    @Value("${sms.mq.rabbitmq.virtualhost}")
     private String rabbitmqVirtualhost;
 
-    @Value("${mq.rabbitmq.username}")
+    @Value("${sms.mq.rabbitmq.username}")
     private String rabbitmqUsername;
 
-    @Value("${mq.rabbitmq.password}")
+    @Value("${sms.mq.rabbitmq.password}")
     private String rabbitmqPassword;
 
-    @Value("${mq.rabbitmq.exchange.direct.retrieve}")
+    @Value("${sms.mq.rabbitmq.exchange.direct.retrieve}")
     private String rabbitmqExchangeDirectRetrieveName;
 
-    @Value("${mq.rabbitmq.exchange.direct.query}")
+    @Value("${sms.mq.rabbitmq.exchange.direct.query}")
     private String rabbitmqExchangeDirectQueryName;
 
-    @Value("${mq.rabbitmq.exchange.topic.log}")
+    @Value("${sms.mq.rabbitmq.exchange.topic.log}")
     private String rabbitmqExchangeTopicLogName;
 
-    @Value("${mq.rabbitmq.exchange.fanout.name}")
+    @Value("${sms.mq.rabbitmq.exchange.fanout.name:}")
     private String rabbitmqExchangeFanoutName;
 
-    @Value("${mq.rabbitmq.queue.log}")
+    @Value("${sms.mq.rabbitmq.queue.log}")
     private String rabbitmqQueueLogName;
 
-    @Value("${mq.rabbitmq.queue.retrieve}")
+    @Value("${sms.mq.rabbitmq.queue.retrieve}")
     private String rabbitmqQueueRetrieveName;
 
-    @Value("${mq.rabbitmq.queue.query}")
+    @Value("${sms.mq.rabbitmq.queue.query}")
     private String rabbitmqQueueQueryName;
 
     private static final String _SPLIT = ",";
@@ -127,7 +134,7 @@ public class SmsConfig {
     /**
      * logList
      */
-    public List<SmsLog> logList = new ArrayList();
+    public static List<SmsLog> logList = new ArrayList();
 
     /**
      * mongoClient
@@ -141,20 +148,15 @@ public class SmsConfig {
     /**
      * getLogList
      */
-    protected void getLogList() {
-        boolean enableMongodbLog = Arrays.asList(logMode.split(",")).indexOf(SmsLogEnum.Mongodb.getValue()) > 0;
-        if(enableMongodbLog){
-            logList.add(new MongodbLog());
+    protected void setLogList() {
+        boolean enableMongodbLog = Arrays.asList(logMode.split(",")).indexOf(SmsLogEnum.Mongodb.getValue()) >= 0;
+        if(enableMongodbLog) {
+            logList.add(new MongodbLog(logMongodbUrl));
         }
     }
 
-    /**
-     * mongoTemplate
-     *
-     * @return MongoTemplate
-     */
-    public @Bean MongoTemplate mongoTemplate() {
-        return new MongoTemplate(mongoClient(), "SMS_LOG_MONGODB");
+    protected List<SmsLog> getLogList() {
+        return logList;
     }
 
     /**
@@ -163,7 +165,7 @@ public class SmsConfig {
      * @return RabbitAdmin 配置
      */
     @Bean
-    @Profile("local")
+    @ConditionalOnProperty(value = "sms.mq.mode", havingValue = "rabbitmq")
     public RabbitAdmin rabbitAdmin() {
         try{
             RabbitAdmin rabbitAdmin = new RabbitAdmin(getRabbitTemplate());
@@ -218,7 +220,6 @@ public class SmsConfig {
         return rabbitTemplate;
     }
 
-
     public @Bean CachingConnectionFactory connectionFactory() {
         CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
         connectionFactory.setUsername(rabbitmqUsername);
@@ -234,7 +235,7 @@ public class SmsConfig {
      *
      * @param message 发送消息
      */
-    public void sendRabbitMessage(@NotNull String message) {
+    public void sendRabbitMessage(Exchange exchange, @NotNull String message) {
         getRabbitTemplate().convertAndSend(message);
     }
 
@@ -258,7 +259,7 @@ public class SmsConfig {
             default:
                 break;
         }
-        sendRabbitMessage(message);
+        // sendRabbitMessage(message);
     }
 
     /**
@@ -266,7 +267,7 @@ public class SmsConfig {
      *
      * @return SmsRequestClient
      */
-    public @Bean SmsRequestClient smsUser() throws NoSuchMethodException {
+    public @Bean SmsRequestClient smsUser(@Autowired SmsConfig smsConfig) throws NoSuchMethodException {
         return ProxyFactory.genProxy(
             (SmsRequestClient) new SmsUser(),
             new ProxyFactory.ProxyEntry[]{
@@ -278,7 +279,7 @@ public class SmsConfig {
                         String smsResultData = (String) ((ProxyFactory.ProxyEntry) proxyEntry).getResultData();
                         log.info(smsResultData);
                         // 记录日志
-                        logList.stream().forEach(v->v.log(new LogSaveQuery(){{
+                        ((SmsConfig) applicationContext.getBean("smsConfig")).getLogList().stream().forEach(v->v.log(new LogSaveQuery(){{
                             setDate(new Date());
                             setSmsLogTypeEnum(SmsLogTypeEnum.SMS_SEND_RESULT_TRUE);
                         }}));
@@ -289,7 +290,145 @@ public class SmsConfig {
                     setClazz(SmsUser.class);
                     setMethod(SmsUser.class.getDeclaredMethod("sendSmsValidCode", SmsEnum.class, AliSmsValidCodeDTO.class));
                 }}
-        })
+            }
+        )
         .genProxy();
+    }
+
+    public String getLogMode() {
+        return logMode;
+    }
+
+    public void setLogMode(String logMode) {
+        this.logMode = logMode;
+    }
+
+    public Boolean getLogMongodbEnable() {
+        return logMongodbEnable;
+    }
+
+    public void setLogMongodbEnable(Boolean logMongodbEnable) {
+        this.logMongodbEnable = logMongodbEnable;
+    }
+
+    public String getLogMongodbUrl() {
+        return logMongodbUrl;
+    }
+
+    public void setLogMongodbUrl(String logMongodbUrl) {
+        this.logMongodbUrl = logMongodbUrl;
+    }
+
+    public String getMqMode() {
+        return mqMode;
+    }
+
+    public void setMqMode(String mqMode) {
+        this.mqMode = mqMode;
+    }
+
+    public String getRabbitmqHost() {
+        return rabbitmqHost;
+    }
+
+    public void setRabbitmqHost(String rabbitmqHost) {
+        this.rabbitmqHost = rabbitmqHost;
+    }
+
+    public String getRabbitmqPort() {
+        return rabbitmqPort;
+    }
+
+    public void setRabbitmqPort(String rabbitmqPort) {
+        this.rabbitmqPort = rabbitmqPort;
+    }
+
+    public String getRabbitmqVirtualhost() {
+        return rabbitmqVirtualhost;
+    }
+
+    public void setRabbitmqVirtualhost(String rabbitmqVirtualhost) {
+        this.rabbitmqVirtualhost = rabbitmqVirtualhost;
+    }
+
+    public String getRabbitmqUsername() {
+        return rabbitmqUsername;
+    }
+
+    public void setRabbitmqUsername(String rabbitmqUsername) {
+        this.rabbitmqUsername = rabbitmqUsername;
+    }
+
+    public String getRabbitmqPassword() {
+        return rabbitmqPassword;
+    }
+
+    public void setRabbitmqPassword(String rabbitmqPassword) {
+        this.rabbitmqPassword = rabbitmqPassword;
+    }
+
+    public String getRabbitmqExchangeDirectRetrieveName() {
+        return rabbitmqExchangeDirectRetrieveName;
+    }
+
+    public void setRabbitmqExchangeDirectRetrieveName(String rabbitmqExchangeDirectRetrieveName) {
+        this.rabbitmqExchangeDirectRetrieveName = rabbitmqExchangeDirectRetrieveName;
+    }
+
+    public String getRabbitmqExchangeDirectQueryName() {
+        return rabbitmqExchangeDirectQueryName;
+    }
+
+    public void setRabbitmqExchangeDirectQueryName(String rabbitmqExchangeDirectQueryName) {
+        this.rabbitmqExchangeDirectQueryName = rabbitmqExchangeDirectQueryName;
+    }
+
+    public String getRabbitmqExchangeTopicLogName() {
+        return rabbitmqExchangeTopicLogName;
+    }
+
+    public void setRabbitmqExchangeTopicLogName(String rabbitmqExchangeTopicLogName) {
+        this.rabbitmqExchangeTopicLogName = rabbitmqExchangeTopicLogName;
+    }
+
+    public String getRabbitmqExchangeFanoutName() {
+        return rabbitmqExchangeFanoutName;
+    }
+
+    public void setRabbitmqExchangeFanoutName(String rabbitmqExchangeFanoutName) {
+        this.rabbitmqExchangeFanoutName = rabbitmqExchangeFanoutName;
+    }
+
+    public String getRabbitmqQueueLogName() {
+        return rabbitmqQueueLogName;
+    }
+
+    public void setRabbitmqQueueLogName(String rabbitmqQueueLogName) {
+        this.rabbitmqQueueLogName = rabbitmqQueueLogName;
+    }
+
+    public String getRabbitmqQueueRetrieveName() {
+        return rabbitmqQueueRetrieveName;
+    }
+
+    public void setRabbitmqQueueRetrieveName(String rabbitmqQueueRetrieveName) {
+        this.rabbitmqQueueRetrieveName = rabbitmqQueueRetrieveName;
+    }
+
+    public String getRabbitmqQueueQueryName() {
+        return rabbitmqQueueQueryName;
+    }
+
+    public void setRabbitmqQueueQueryName(String rabbitmqQueueQueryName) {
+        this.rabbitmqQueueQueryName = rabbitmqQueueQueryName;
+    }
+
+    public void setLogList(List<SmsLog> logList) {
+        this.logList = logList;
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
     }
 }
