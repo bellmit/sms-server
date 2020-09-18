@@ -24,11 +24,22 @@ import com.bim.marvel.message.sms.util.ProxyFactory;
 import com.bim.marvel.message.sms.util.SmsLog;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
+import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.Charsets;
 import org.springframework.amqp.core.*;
+import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.rabbit.config.RetryInterceptorBuilder;
+import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
+import org.springframework.amqp.rabbit.config.SimpleRabbitListenerEndpoint;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
+import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
+import org.springframework.amqp.rabbit.listener.api.ChannelAwareMessageListener;
+import org.springframework.amqp.rabbit.retry.ImmediateRequeueMessageRecoverer;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,13 +51,19 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.lang.Nullable;
+import org.springframework.retry.RetryCallback;
+import org.springframework.retry.RetryContext;
+import org.springframework.retry.RetryListener;
 import org.springframework.retry.backoff.ExponentialBackOffPolicy;
+import org.springframework.retry.backoff.NoBackOffPolicy;
+import org.springframework.retry.interceptor.RetryOperationsInterceptor;
+import org.springframework.retry.listener.RetryListenerSupport;
+import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 import javax.validation.constraints.NotNull;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * @author xao
@@ -195,6 +212,9 @@ public class SmsConfig implements ApplicationContextAware {
         }
     }
 
+    private void getExchange(String exchangeName){
+    }
+
     /**
      * getRabbitTemplate
      *
@@ -214,8 +234,11 @@ public class SmsConfig implements ApplicationContextAware {
         retryTemplate.setBackOffPolicy(backOffPolicy);
         rabbitTemplate.setRetryTemplate(retryTemplate);
 
+        rabbitTemplate.setConfirmCallback((CorrelationData correlationData, boolean ack, @Nullable String cause)->{
+            log.info("setConfirmCallback");
+        });
         rabbitTemplate.setReturnCallback((Message message, int replyCode, String replyText, String exchange, String routingKey)->{
-            System.out.println("sendmessageCallback");
+            log.info("setReturnCallback");
         });
         return rabbitTemplate;
     }
@@ -235,8 +258,8 @@ public class SmsConfig implements ApplicationContextAware {
      *
      * @param message 发送消息
      */
-    public void sendRabbitMessage(Exchange exchange, @NotNull String message) {
-        getRabbitTemplate().convertAndSend(message);
+    public void sendRabbitMessage(String exchange, String routingKey, @NotNull String message) {
+        getRabbitTemplate().convertAndSend(exchange, routingKey, message);
     }
 
     /**
@@ -244,22 +267,26 @@ public class SmsConfig implements ApplicationContextAware {
      *
      * @param smsEventEnum
      */
-    public void pushEvent(SmsEventEnum smsEventEnum) {
-        String message = "";
+    public void pushEvent(SmsEventEnum smsEventEnum, String message) {
+        String exchange = "";
+        String routingKey = "";
         switch (smsEventEnum) {
             case SEND_SMS:
-                message = "log.sms.send";
+                exchange = rabbitmqExchangeTopicLogName;
+                routingKey = "log.sms.send";
                 break;
             case SEND_SMS_TRUE:
-                message = "log.sms.send.true";
+                exchange = rabbitmqExchangeTopicLogName;
+                routingKey = "log.sms.send.true";
                 break;
             case SEND_SMS_FALSE:
-                message = "retrieve";
+                exchange = rabbitmqExchangeDirectRetrieveName;
+                routingKey = "retrieve";
                 break;
             default:
                 break;
         }
-        // sendRabbitMessage(message);
+        sendRabbitMessage(exchange, routingKey, message);
     }
 
     /**
@@ -277,7 +304,17 @@ public class SmsConfig implements ApplicationContextAware {
                     setProAftAspect((proxyEntry)->{
                         // 短信发送状态
                         String smsResultData = (String) ((ProxyFactory.ProxyEntry) proxyEntry).getResultData();
+
                         log.info(smsResultData);
+
+                        // 短信发送结果
+                        boolean smsResult = smsResultData != null;
+
+                        // 短信发送异常
+                        if(!smsResult) {
+                            pushEvent(SmsEventEnum.SEND_SMS_FALSE, "短信发送异常，重新发送短信");
+                        }
+
                         // 记录日志
                         ((SmsConfig) applicationContext.getBean("smsConfig")).getLogList().stream().forEach(v->v.log(new LogSaveQuery(){{
                             setDate(new Date());
@@ -293,6 +330,79 @@ public class SmsConfig implements ApplicationContextAware {
             }
         )
         .genProxy();
+    }
+
+    public void rabbitmqQueueLogNameListener(){
+
+    }
+
+    /**
+     * messageListener
+     */
+    public void messageListener(Channel channel, String consumerQueue, long deliveryTag, Message message) throws Exception {
+        // rabbitmqQueueLogName
+        if(rabbitmqQueueLogName.equals(consumerQueue)){
+            throw new RuntimeException("consumerQueue" + message.toString());
+        }
+        // rabbitmqQueueQueryName
+        if(rabbitmqQueueQueryName.equals(consumerQueue)){
+        }
+        // rabbitmqQueueRetrieveName
+        if(rabbitmqQueueRetrieveName.equals(consumerQueue)){
+            throw new Exception("consumerQueue" + message.toString());
+        }
+    }
+
+    public @Bean SimpleMessageListenerContainer simpleMessageListenerContainer(SimpleRabbitListenerContainerFactory simpleRabbitListenerContainerFactory) {
+        SimpleRabbitListenerEndpoint simpleRabbitListenerEndpoint = new SimpleRabbitListenerEndpoint();
+        // setMessageListener
+        simpleRabbitListenerEndpoint.setMessageListener((ChannelAwareMessageListener) (message, channel) -> {
+            long deliveryTag = message.getMessageProperties().getDeliveryTag();
+            String consumerQueue = message.getMessageProperties().getConsumerQueue();
+            messageListener(channel, consumerQueue, deliveryTag, message);
+            log.info(new String(message.getBody(), Charsets.UTF_8));
+        });
+        // setId
+        simpleRabbitListenerEndpoint.setId(String.valueOf(UUID.randomUUID()));
+        simpleRabbitListenerEndpoint.setAckMode(AcknowledgeMode.MANUAL);
+        simpleRabbitListenerContainerFactory.setConcurrentConsumers(5);
+        simpleRabbitListenerContainerFactory.setMaxConcurrentConsumers(10);
+        // simpleMessageListenerContainer
+        SimpleMessageListenerContainer simpleMessageListenerContainer = simpleRabbitListenerContainerFactory.createListenerContainer(simpleRabbitListenerEndpoint);
+        // setQueueNames
+        simpleMessageListenerContainer.setQueueNames(rabbitmqQueueLogName, rabbitmqQueueQueryName, rabbitmqQueueRetrieveName);
+        // setAdviceChain
+        simpleMessageListenerContainer.setAdviceChain(retrieve());
+        return simpleMessageListenerContainer;
+    }
+
+    private RetryOperationsInterceptor retrieve() {
+        RetryTemplate retryTemplate = new RetryTemplate();
+        retryTemplate.setRetryPolicy(new SimpleRetryPolicy(2));
+        retryTemplate.setBackOffPolicy(new ExponentialBackOffPolicy(){{
+            setInitialInterval(1000);
+            setMaxInterval(10 * 1000L);
+            setMultiplier(2);
+        }});
+        retryTemplate.registerListener(new RetryListenerSupport() {
+            @Override
+            public <T, E extends Throwable> boolean open(RetryContext context, RetryCallback<T, E> callback) {
+                log.info("Retrieve：1");
+                log.info(String.valueOf(System.currentTimeMillis()));
+                return super.open(context, callback);
+            }
+
+            @Override
+            public <T, E extends Throwable> void close(RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
+                log.info("Retrieve：close");
+            }
+
+            @Override
+            public <T, E extends Throwable> void onError(RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
+                log.info("Retrieve：onError");
+            }
+        });
+        return RetryInterceptorBuilder.stateless().retryOperations(retryTemplate).recoverer(new ImmediateRequeueMessageRecoverer()).build();
     }
 
     public String getLogMode() {
@@ -424,7 +534,7 @@ public class SmsConfig implements ApplicationContextAware {
     }
 
     public void setLogList(List<SmsLog> logList) {
-        this.logList = logList;
+        SmsConfig.logList = logList;
     }
 
     @Override
