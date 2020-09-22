@@ -25,6 +25,11 @@ public enum SmsLogTypeEnum {
     SMS_SEND_RESULT_TRUE("SMS_SEND_RESULT_TRUE", "短信发送正常"),
 
     /**
+     * 短信平台返回数据
+     */
+    SMS_SEND_RESULT("SMS_SEND_RESULT", "短信平台返回数据"),
+
+    /**
      * 短信发送异常
      */
     SMS_SEND_RESULT_FALSE("SMS_SEND_RESULT_FALSE", "短信发送异常"),

@@ -14,6 +14,9 @@ import com.bim.marvel.message.sms.enums.SmsEnum;
 import com.bim.marvel.message.sms.enums.SmsTypeEnum;
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
+import java.io.Serializable;
+
 /**
  * 〈阿里云短信参数〉
  *
@@ -22,11 +25,12 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
-public class AliSmsNoticeDTO {
+public class AliSmsNoticeDTO implements Serializable {
 
     /**
      * 号码
      */
+    @NotNull
     private String phoneNumbers;
 
     /**

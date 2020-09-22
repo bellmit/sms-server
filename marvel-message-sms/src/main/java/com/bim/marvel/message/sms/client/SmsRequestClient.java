@@ -13,6 +13,7 @@ package com.bim.marvel.message.sms.client;
 import com.bim.marvel.message.sms.dto.AliSmsNoticeDTO;
 import com.bim.marvel.message.sms.dto.AliSmsValidCodeDTO;
 import com.bim.marvel.message.sms.enums.SmsEnum;
+import org.springframework.context.ApplicationContext;
 
 /**
  * 〈短信服务客户端〉
@@ -23,7 +24,33 @@ import com.bim.marvel.message.sms.enums.SmsEnum;
  */
 public interface SmsRequestClient {
 
-    void sendSmsNotice(SmsEnum smsEnum, AliSmsNoticeDTO aliSmsNoticeDTO) throws NoSuchMethodException;
+    /**
+     * sendRequestSmsNotice
+     *
+     * @param smsEnum
+     * @param aliSmsNoticeDTO
+     * @return
+     * @throws Exception
+     */
+    Long sendRequestSmsNotice(SmsEnum smsEnum, AliSmsNoticeDTO aliSmsNoticeDTO, ApplicationContext applicationContext) throws Exception;
 
-    void sendSmsValidCode(SmsEnum smsEnum, AliSmsValidCodeDTO aliSmsValidCodeDTO);
+    /**
+     * sendRequestSmsValidCode
+     *
+     * @param smsEnum
+     * @param aliSmsValidCodeDTO
+     * @return
+     */
+    Long sendRequestSmsValidCode(SmsEnum smsEnum, AliSmsValidCodeDTO aliSmsValidCodeDTO);
+
+    /**
+     * sendSmsNotice
+     *
+     * @param smsEnum
+     * @param aliSmsNoticeDTO
+     * @param <T>
+     * @return
+     * @throws Exception
+     */
+    <T> T sendSmsNotice(SmsEnum smsEnum, AliSmsNoticeDTO aliSmsNoticeDTO) throws Exception;
 }

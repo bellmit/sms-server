@@ -64,11 +64,12 @@ public class AliSmsUtil {
      * @param smsEnum 短信类型
      * @throws Exception Exception
      */
-    public static void sendAliSmsNotice(AliSmsNoticeDTO aliSmsNoticeDTO, SmsEnum smsEnum) throws Exception {
+    public static String sendAliSmsNotice(AliSmsNoticeDTO aliSmsNoticeDTO, SmsEnum smsEnum) throws Exception {
         AliSmsQuery aliSmsQuery = AliSmsFactory.getAliSmsQuery(smsEnum);
         aliSmsQuery.setPhone(aliSmsNoticeDTO.getPhoneNumbers());
         aliSmsQuery.setTemplateParam(aliSmsNoticeDTO.getTemplateParam());
         sendAliSmsValidCode(aliSmsQuery.getAliSmsConfig(), aliSmsQuery);
+        return null;
     }
 
     /**

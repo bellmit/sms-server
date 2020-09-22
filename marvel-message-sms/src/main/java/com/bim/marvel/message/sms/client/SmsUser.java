@@ -10,13 +10,16 @@
  */
 package com.bim.marvel.message.sms.client;
 
+import com.bim.marvel.message.sms.config.AliSmsConfig;
 import com.bim.marvel.message.sms.config.SmsConfig;
 import com.bim.marvel.message.sms.dto.AliSmsNoticeDTO;
 import com.bim.marvel.message.sms.dto.AliSmsValidCodeDTO;
 import com.bim.marvel.message.sms.enums.SmsEnum;
 import com.bim.marvel.message.sms.enums.SmsEventEnum;
+import com.bim.marvel.message.sms.util.aliSms.AliSmsUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.util.StringUtils;
 
 /**
  * SmsUser
@@ -26,10 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @since 1.0.0
  */
 @Slf4j
-public class SmsUser implements SmsRequestClient{
-
-    @Autowired
-    private SmsConfig smsConfig;
+public class SmsUser implements SmsRequestClient {
 
     /**
      * 发送通知短息
@@ -37,9 +37,18 @@ public class SmsUser implements SmsRequestClient{
      * @param smsEnum
      */
     @Override
-    public void sendSmsNotice(SmsEnum smsEnum, AliSmsNoticeDTO aliSmsNoticeDTO) throws NoSuchMethodException {
-        smsConfig.pushEvent(SmsEventEnum.SEND_SMS, aliSmsNoticeDTO);
+    public Long sendRequestSmsNotice(SmsEnum smsEnum, AliSmsNoticeDTO aliSmsNoticeDTO, ApplicationContext applicationContext) throws Exception {
+        if(aliSmsNoticeDTO == null || StringUtils.isEmpty(aliSmsNoticeDTO.getPhoneNumbers())){
+            throw new RuntimeException("号码不可为空值");
+        }
+        applicationContext.getBean(AliSmsConfig.class).pushEvent(SmsEventEnum.SEND_SMS, aliSmsNoticeDTO);
         log.info("pushEvent" + SmsEventEnum.SEND_SMS);
+        return null;
+    }
+
+    @Override
+    public <T> T sendSmsNotice(SmsEnum smsEnum, AliSmsNoticeDTO aliSmsNoticeDTO) throws Exception {
+        return (T) AliSmsUtil.sendAliSmsNotice(aliSmsNoticeDTO, smsEnum);
     }
 
     /**
@@ -48,6 +57,10 @@ public class SmsUser implements SmsRequestClient{
      * @param smsEnum
      */
     @Override
-    public void sendSmsValidCode(SmsEnum smsEnum, AliSmsValidCodeDTO aliSmsValidCodeDTO) {
+    public Long sendRequestSmsValidCode(SmsEnum smsEnum, AliSmsValidCodeDTO aliSmsValidCodeDTO) {
+        return null;
+    }
+
+    public void sendSms(){
     }
 }

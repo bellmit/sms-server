@@ -91,6 +91,8 @@ sms:
     mongodb:
       enabled: true
       url: mongodb://122.51.184.243:27017/admin
+  retrieve:
+    maxCount: 2
   mq:
     mode: rabbitmq
     rabbitmq:
@@ -103,10 +105,12 @@ sms:
         log: LOG
         retrieve: RETRIEVE
         query: QUERY
+        send: SEND
       exchange:
         direct:
           retrieve: RETRIEVE
           query: QUERY
+          send: SEND
         topic:
           log: LOG
   alisms:

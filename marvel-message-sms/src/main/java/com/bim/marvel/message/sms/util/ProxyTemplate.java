@@ -55,14 +55,16 @@ public class ProxyTemplate<T> implements InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         System.out.println("invoke origin: " + System.currentTimeMillis());
+        try{
+            ProxyEntry proxyEntry = getProxy(method);
+            proxyEntry.setResultData(method.invoke(proxyTarget, args));
+            proxyEntry.setArgs(args);
 
-        ProxyEntry proxyEntry = getProxy(method);
-        proxyEntry.setResultData(method.invoke(proxyTarget, args));
-        proxyEntry.setArgs(args);
-
-        Object invoke_result = proxyEntry.getProAftAspect().apply(proxyEntry);
-
-        System.out.println("invoke enhancer: " + System.currentTimeMillis());
-        return invoke_result;
+            Object invoke_result = proxyEntry.getProAftAspect().apply(proxyEntry);
+            System.out.println("invoke enhancer: " + System.currentTimeMillis());
+            return invoke_result;
+        }catch (Exception ex){
+            return method.invoke(proxyTarget, args);
+        }
     }
 }

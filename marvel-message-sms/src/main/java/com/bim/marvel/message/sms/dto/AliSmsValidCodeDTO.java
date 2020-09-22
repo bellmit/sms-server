@@ -13,6 +13,8 @@ package com.bim.marvel.message.sms.dto;
 import com.bim.marvel.message.sms.enums.SmsEnum;
 import lombok.Data;
 
+import java.io.Serializable;
+
 /**
  * 〈阿里云短信参数〉
  *
@@ -21,7 +23,7 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
-public class AliSmsValidCodeDTO {
+public class AliSmsValidCodeDTO implements Serializable {
 
     /**
      * 号码

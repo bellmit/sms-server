@@ -10,12 +10,17 @@
  */
 package com.bim.marvel.feign.impl;
 
-import com.bim.marvel.feign.AliSmsFeignController;
+import com.bim.marvel.message.sms.client.SmsRequestClient;
+import com.bim.marvel.message.sms.client.SmsUser;
+import com.bim.marvel.message.sms.config.AliSmsConfig;
 import com.bim.marvel.message.sms.dto.AliSmsNoticeDTO;
 import com.bim.marvel.message.sms.dto.AliSmsValidCodeDTO;
 import com.bim.marvel.message.sms.enums.SmsEnum;
-import com.bim.marvel.message.sms.client.SmsRequestClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 import javax.validation.Valid;
 
 /**
@@ -25,13 +30,17 @@ import javax.validation.Valid;
  * @date 2020/9/14
  * @since 1.0.0
  */
-public class AliSmsFeignControllerImpl implements AliSmsFeignController {
+@RestController
+public class AliSmsFeignControllerImpl {
 
     /**
      * smsRequestClient
      */
     @Autowired
-    private SmsRequestClient smsRequestClient;
+    private AliSmsConfig aliSmsConfig;
+
+    @Autowired
+    private ApplicationContext applicationContext;
 
     /**
      * 发送短信
@@ -39,10 +48,10 @@ public class AliSmsFeignControllerImpl implements AliSmsFeignController {
      * @param aliSmsNoticeDTO 短信参数
      * @throws Exception Exception
      */
-    @Override
-    public void sendSmsFeign(AliSmsNoticeDTO aliSmsNoticeDTO) throws Exception {
-        smsRequestClient.sendSmsNotice(SmsEnum.Valid_Code_Sms_01, aliSmsNoticeDTO);
-    }
+//    @Override
+//    public void sendSmsFeign() throws Exception {
+//        aliSmsConfig.smsUser().sendSmsNotice(SmsEnum.Valid_Code_Sms_01, null);
+//    }
 
     /**
      * 发送短信
@@ -50,8 +59,11 @@ public class AliSmsFeignControllerImpl implements AliSmsFeignController {
      * @param aliSmsValidCodeDTO 短信参数
      * @throws Exception Exception
      */
-    @Override
     public void sendSmsFeign(@Valid AliSmsValidCodeDTO aliSmsValidCodeDTO) throws Exception {
-        smsRequestClient.sendSmsValidCode(SmsEnum.Valid_Code_Sms_02, aliSmsValidCodeDTO);
+    }
+
+    @GetMapping("/sendNoticeSms")
+    public void sendNoticeSms(@Valid AliSmsNoticeDTO aliSmsNoticeDTO) throws Exception {
+        aliSmsConfig.smsUser().sendRequestSmsNotice(SmsEnum.Valid_Code_Sms_01, aliSmsNoticeDTO, applicationContext);
     }
 }

@@ -10,9 +10,11 @@
  */
 package com.bim.marvel.message.sms.config;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.bim.marvel.common.util.SimpleConverter;
 import com.bim.marvel.message.sms.client.SmsRequestClient;
+import com.bim.marvel.message.sms.client.SmsSender;
 import com.bim.marvel.message.sms.client.SmsUser;
 import com.bim.marvel.message.sms.dto.AliSmsNoticeDTO;
 import com.bim.marvel.message.sms.dto.AliSmsValidCodeDTO;
@@ -21,6 +23,7 @@ import com.bim.marvel.message.sms.enums.SmsLogTypeEnum;
 import com.bim.marvel.message.sms.enums.SmsEnum;
 import com.bim.marvel.message.sms.enums.SmsLogEnum;
 import com.bim.marvel.message.sms.query.LogSaveQuery;
+import com.bim.marvel.message.sms.query.SmsQuery;
 import com.bim.marvel.message.sms.util.MongodbLog;
 import com.bim.marvel.message.sms.util.ProxyEntry;
 import com.bim.marvel.message.sms.util.ProxyFactory;
@@ -280,7 +283,11 @@ public class SmsConfig implements ApplicationContextAware {
      */
     public void sendRabbitMessage(String exchange, String routingKey, @NotNull Object message) {
         log.info("sendRabbitMessage");
-        getRabbitTemplate().convertAndSend(exchange, routingKey, message);
+        try{
+            getRabbitTemplate().convertAndSend(exchange, routingKey, JSON.toJSONString(message));
+        }catch (Exception ex){
+            log.error(ex.getMessage());
+        }
         log.info(new HashMap(){{
             put("exchange", exchange);
             put("routingKey", routingKey);
@@ -321,38 +328,43 @@ public class SmsConfig implements ApplicationContextAware {
      *
      * @return SmsRequestClient
      */
-    public @Bean SmsRequestClient smsUser(@Autowired SmsConfig smsConfig) throws NoSuchMethodException {
+    public @Bean SmsRequestClient smsUser() throws NoSuchMethodException {
         return ProxyFactory.genProxy(
             (SmsRequestClient) new SmsUser(),
             new ProxyEntry[]{
                 new ProxyEntry(){{
                     setClazz(SmsUser.class);
                     setMethod(SmsUser.class.getDeclaredMethod("sendSmsNotice", SmsEnum.class, AliSmsNoticeDTO.class));
+                    // setProBefAspect
+
                     setProAftAspect((proxyEntry)->{
                         // 短信发送状态
                         String smsResultData = (String) ((ProxyEntry) proxyEntry).getResultData();
 
-                        log.info(smsResultData);
+                        log.info("短信发送状态: " + smsResultData);
+                        SmsQuery smsQuery = JSON.parseObject(smsResultData, SmsQuery.class);
 
-                        // 短信发送结果
+                        // 记录短信发送日志
+                        ((SmsConfig) applicationContext.getBean("smsConfig")).getLogList().stream().forEach(v->v.log(new LogSaveQuery(){{
+                            setDate(new Date());
+                            setSmsLogTypeEnum(SmsLogTypeEnum.SMS_SEND_RESULT);
+                            setSmsQuery(smsQuery);
+                        }}));
+
+                        // todo 短信发送结果
                         boolean smsResult = smsResultData != null;
 
                         // 短信发送异常
                         if(!smsResult) {
-                            pushEvent(SmsEventEnum.SEND_SMS_FALSE, "短信发送异常，重新发送短信");
+                            return SmsEventEnum.SEND_SMS_FALSE;
+                        }else{
+                            return SmsEventEnum.SEND_SMS_TRUE;
                         }
-
-                        // 记录日志
-                        ((SmsConfig) applicationContext.getBean("smsConfig")).getLogList().stream().forEach(v->v.log(new LogSaveQuery(){{
-                            setDate(new Date());
-                            setSmsLogTypeEnum(SmsLogTypeEnum.SMS_SEND_RESULT_TRUE);
-                        }}));
-                        return SmsLogTypeEnum.SMS_SEND_RESULT_TRUE;
                     });
                 }},
                 new ProxyEntry(){{
                     setClazz(SmsUser.class);
-                    setMethod(SmsUser.class.getDeclaredMethod("sendSmsValidCode", SmsEnum.class, AliSmsValidCodeDTO.class));
+                    setMethod(SmsUser.class.getDeclaredMethod("sendRequestSmsValidCode", SmsEnum.class, AliSmsValidCodeDTO.class));
                 }}
             }
         )
@@ -378,8 +390,8 @@ public class SmsConfig implements ApplicationContextAware {
         try{
             smsRequestClient.sendSmsNotice(SmsEnum.Valid_Code_Sms_01, aliSmsNoticeDTO);
             return SmsEventEnum.SEND_SMS_TRUE;
-        }catch(Exception ex){
-            if(smsRetrieveMaxCount > count){
+        }catch(Exception ex) {
+            if(smsRetrieveMaxCount > count) {
                 return SmsEventEnum.SEND_SMS_FALSE_RETRIEVE;
             }
             return SmsEventEnum.SEND_SMS_FALSE;
