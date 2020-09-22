@@ -11,7 +11,7 @@
 package com.bim.marvel.message.sms.enums;
 
 /**
- * 短信类型
+ * 短信
  * @author xao
  */
 public enum SmsEnum {
@@ -19,8 +19,8 @@ public enum SmsEnum {
     /**
      * Valid_Code_Sms_01
      */
-    Valid_Code_Sms_01("1", "验证码短信01", SmsTypeEnum.SmsValidCode, "", "4"),
-    Valid_Code_Sms_02("2", "验证码短信02", SmsTypeEnum.SmsValidCode, "", "6");
+    Valid_Code_Sms_01("1", "4位的验证码短信", SmsTypeEnum.SmsValidCode, "", "4"),
+    Valid_Code_Sms_02("2", "6位的验证码短信", SmsTypeEnum.SmsValidCode, "", "6");
 
     /**
      * value

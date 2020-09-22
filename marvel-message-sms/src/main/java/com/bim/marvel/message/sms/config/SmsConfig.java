@@ -22,6 +22,7 @@ import com.bim.marvel.message.sms.enums.SmsEnum;
 import com.bim.marvel.message.sms.enums.SmsLogEnum;
 import com.bim.marvel.message.sms.query.LogSaveQuery;
 import com.bim.marvel.message.sms.util.MongodbLog;
+import com.bim.marvel.message.sms.util.ProxyEntry;
 import com.bim.marvel.message.sms.util.ProxyFactory;
 import com.bim.marvel.message.sms.util.SmsLog;
 import com.mongodb.client.MongoClient;
@@ -214,7 +215,7 @@ public class SmsConfig implements ApplicationContextAware {
             rabbitAdmin.declareBinding(BindingBuilder.bind(queueSend).to(exchangeSend).with("send").noargs());
             rabbitAdmin.declareBinding(BindingBuilder.bind(queueLog).to(exchangeQuery).with("query").noargs());
             rabbitAdmin.declareBinding(BindingBuilder.bind(queueLog).to(exchangeLog).with("log.#").noargs());
-            rabbitAdmin.declareBinding(BindingBuilder.bind(queueRetrieve).to(exchangeLog).with("log.#").noargs());
+            rabbitAdmin.declareBinding(BindingBuilder.bind(queueRetrieve).to(exchangeSend).with("log.#").noargs());
             // rabbitAdmin
             return rabbitAdmin;
         }catch(Exception ex){
@@ -290,9 +291,8 @@ public class SmsConfig implements ApplicationContextAware {
     /**
      * pushEvent
      *
-     *
-     *
      * @param smsEventEnum
+     * @param message
      */
     public void pushEvent(SmsEventEnum smsEventEnum, Object message) {
         String exchange = "";
@@ -324,13 +324,13 @@ public class SmsConfig implements ApplicationContextAware {
     public @Bean SmsRequestClient smsUser(@Autowired SmsConfig smsConfig) throws NoSuchMethodException {
         return ProxyFactory.genProxy(
             (SmsRequestClient) new SmsUser(),
-            new ProxyFactory.ProxyEntry[]{
-                new ProxyFactory.ProxyEntry(){{
+            new ProxyEntry[]{
+                new ProxyEntry(){{
                     setClazz(SmsUser.class);
                     setMethod(SmsUser.class.getDeclaredMethod("sendSmsNotice", SmsEnum.class, AliSmsNoticeDTO.class));
                     setProAftAspect((proxyEntry)->{
                         // 短信发送状态
-                        String smsResultData = (String) ((ProxyFactory.ProxyEntry) proxyEntry).getResultData();
+                        String smsResultData = (String) ((ProxyEntry) proxyEntry).getResultData();
 
                         log.info(smsResultData);
 
@@ -350,7 +350,7 @@ public class SmsConfig implements ApplicationContextAware {
                         return SmsLogTypeEnum.SMS_SEND_RESULT_TRUE;
                     });
                 }},
-                new ProxyFactory.ProxyEntry(){{
+                new ProxyEntry(){{
                     setClazz(SmsUser.class);
                     setMethod(SmsUser.class.getDeclaredMethod("sendSmsValidCode", SmsEnum.class, AliSmsValidCodeDTO.class));
                 }}
@@ -380,7 +380,7 @@ public class SmsConfig implements ApplicationContextAware {
             return SmsEventEnum.SEND_SMS_TRUE;
         }catch(Exception ex){
             if(smsRetrieveMaxCount > count){
-
+                return SmsEventEnum.SEND_SMS_FALSE_RETRIEVE;
             }
             return SmsEventEnum.SEND_SMS_FALSE;
         }
@@ -428,6 +428,7 @@ public class SmsConfig implements ApplicationContextAware {
                 smsLogTypeEnum = SmsLogTypeEnum.SMS_SEND_RESULT_FALSE;
             }
             final SmsLogTypeEnum smsLogType = smsLogTypeEnum;
+            // 保存短信发送日志
             getLogList().stream().forEach(v->{
                 v.log(new LogSaveQuery(){{
                     setDate(new Date());
