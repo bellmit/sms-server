@@ -23,7 +23,7 @@ import com.bim.marvel.message.sms.enums.SmsEnum;
  */
 public interface SmsRequestClient {
 
-    void sendSmsNotice(SmsEnum smsEnum, AliSmsNoticeDTO aliSmsNoticeDTO);
+    void sendSmsNotice(SmsEnum smsEnum, AliSmsNoticeDTO aliSmsNoticeDTO) throws NoSuchMethodException;
 
     void sendSmsValidCode(SmsEnum smsEnum, AliSmsValidCodeDTO aliSmsValidCodeDTO);
 }

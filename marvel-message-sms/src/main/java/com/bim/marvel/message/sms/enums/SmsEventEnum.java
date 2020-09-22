@@ -32,7 +32,17 @@ public enum  SmsEventEnum {
     /**
      * 发送短信异常
      */
-    SEND_SMS_FALSE("sendSmsFalse", "发送短信异常");
+    SEND_SMS_FALSE("sendSmsFalse", "发送短信异常"),
+
+    /**
+     * 发送短信异常重试
+     */
+    SEND_SMS_FALSE_RETRIEVE("sendSmsFalseRetrieve", "发送短信异常重试"),
+
+    /**
+     * 发送短信异常最大重试次数
+     */
+    SEND_SMS_FALSE_RETRIEVE_MAX_COUNT("sendSmsFalseRetrieveMaxCount", "发送短信异常最大重试次数");
 
     /**
      * value

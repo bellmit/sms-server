@@ -10,10 +10,13 @@
  */
 package com.bim.marvel.message.sms.client;
 
+import com.bim.marvel.message.sms.config.SmsConfig;
 import com.bim.marvel.message.sms.dto.AliSmsNoticeDTO;
 import com.bim.marvel.message.sms.dto.AliSmsValidCodeDTO;
 import com.bim.marvel.message.sms.enums.SmsEnum;
+import com.bim.marvel.message.sms.enums.SmsEventEnum;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * SmsUser
@@ -25,14 +28,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SmsUser implements SmsRequestClient{
 
+    @Autowired
+    private SmsConfig smsConfig;
+
     /**
      * 发送通知短息
      *
      * @param smsEnum
      */
     @Override
-    public void sendSmsNotice(SmsEnum smsEnum, AliSmsNoticeDTO aliSmsNoticeDTO) {
-        log.info("sendSmsNotice");
+    public void sendSmsNotice(SmsEnum smsEnum, AliSmsNoticeDTO aliSmsNoticeDTO) throws NoSuchMethodException {
+        smsConfig.pushEvent(SmsEventEnum.SEND_SMS, aliSmsNoticeDTO);
+        log.info("pushEvent" + SmsEventEnum.SEND_SMS);
     }
 
     /**

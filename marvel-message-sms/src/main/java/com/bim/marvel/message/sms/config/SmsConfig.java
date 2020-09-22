@@ -10,6 +10,8 @@
  */
 package com.bim.marvel.message.sms.config;
 
+import com.alibaba.fastjson.JSONObject;
+import com.bim.marvel.common.util.SimpleConverter;
 import com.bim.marvel.message.sms.client.SmsRequestClient;
 import com.bim.marvel.message.sms.client.SmsUser;
 import com.bim.marvel.message.sms.dto.AliSmsNoticeDTO;
@@ -125,8 +127,11 @@ public class SmsConfig implements ApplicationContextAware {
     @Value("${sms.mq.rabbitmq.password}")
     private String rabbitmqPassword;
 
+    @Value("${sms.mq.rabbitmq.exchange.direct.send}")
+    private String rabbitmqExchangeDirectSendName;
+
     @Value("${sms.mq.rabbitmq.exchange.direct.retrieve}")
-    private String rabbitmqExchangeDirectRetrieveName;
+    private String rabbitmqExchangeTopicRetrieveName;
 
     @Value("${sms.mq.rabbitmq.exchange.direct.query}")
     private String rabbitmqExchangeDirectQueryName;
@@ -140,11 +145,14 @@ public class SmsConfig implements ApplicationContextAware {
     @Value("${sms.mq.rabbitmq.queue.log}")
     private String rabbitmqQueueLogName;
 
-    @Value("${sms.mq.rabbitmq.queue.retrieve}")
-    private String rabbitmqQueueRetrieveName;
+    @Value("${sms.mq.rabbitmq.queue.send}")
+    private String rabbitmqQueueSendName;
 
     @Value("${sms.mq.rabbitmq.queue.query}")
     private String rabbitmqQueueQueryName;
+
+    @Value("${sms.retrieve.maxCount}")
+    private Integer smsRetrieveMaxCount;
 
     private static final String _SPLIT = ",";
 
@@ -187,8 +195,8 @@ public class SmsConfig implements ApplicationContextAware {
         try{
             RabbitAdmin rabbitAdmin = new RabbitAdmin(getRabbitTemplate());
             // declareExchange
-            Exchange exchangeRetrieve = new DirectExchange(rabbitmqExchangeDirectRetrieveName, false, false);
-            rabbitAdmin.declareExchange(exchangeRetrieve);
+            Exchange exchangeSend = new DirectExchange(rabbitmqExchangeDirectSendName, false, false);
+            rabbitAdmin.declareExchange(exchangeSend);
             Exchange exchangeQuery = new DirectExchange(rabbitmqExchangeDirectQueryName, false, false);
             rabbitAdmin.declareExchange(exchangeQuery);
             Exchange exchangeLog = new TopicExchange(rabbitmqExchangeTopicLogName, false, false);
@@ -196,20 +204,31 @@ public class SmsConfig implements ApplicationContextAware {
             // declareQueue
             Queue queueLog = new Queue(rabbitmqQueueLogName);
             rabbitAdmin.declareQueue(queueLog);
-            Queue queueRetrieve = new Queue(rabbitmqQueueRetrieveName);
+            Queue queueSend = new Queue(rabbitmqQueueSendName);
+            rabbitAdmin.declareQueue(queueSend);
+            Queue queueRetrieve = declareRetrieveQueue(rabbitmqQueueSendName, rabbitmqExchangeDirectSendName);
             rabbitAdmin.declareQueue(queueRetrieve);
             Queue queueQuery = new Queue(rabbitmqQueueQueryName);
             rabbitAdmin.declareQueue(queueQuery);
             // declareBinding
-            rabbitAdmin.declareBinding(BindingBuilder.bind(queueRetrieve).to(exchangeRetrieve).with("retrieve").noargs());
+            rabbitAdmin.declareBinding(BindingBuilder.bind(queueSend).to(exchangeSend).with("send").noargs());
             rabbitAdmin.declareBinding(BindingBuilder.bind(queueLog).to(exchangeQuery).with("query").noargs());
             rabbitAdmin.declareBinding(BindingBuilder.bind(queueLog).to(exchangeLog).with("log.#").noargs());
+            rabbitAdmin.declareBinding(BindingBuilder.bind(queueRetrieve).to(exchangeLog).with("log.#").noargs());
+            // rabbitAdmin
             return rabbitAdmin;
         }catch(Exception ex){
             // log
             log.error(ex.getMessage());
             return null;
         }
+    }
+
+    public Queue declareRetrieveQueue(String queueName, String exchangeName) {
+        return new Queue(queueName + "RetrieveQueue", true, false, false, new HashMap(){{
+            put("x-dead-letter-exchange", exchangeName);
+            put("x-message-ttl", 10000);
+        }});
     }
 
     private void getExchange(String exchangeName){
@@ -258,30 +277,38 @@ public class SmsConfig implements ApplicationContextAware {
      *
      * @param message 发送消息
      */
-    public void sendRabbitMessage(String exchange, String routingKey, @NotNull String message) {
+    public void sendRabbitMessage(String exchange, String routingKey, @NotNull Object message) {
+        log.info("sendRabbitMessage");
         getRabbitTemplate().convertAndSend(exchange, routingKey, message);
+        log.info(new HashMap(){{
+            put("exchange", exchange);
+            put("routingKey", routingKey);
+            put("message", message);
+        }}.toString());
     }
 
     /**
      * pushEvent
      *
+     *
+     *
      * @param smsEventEnum
      */
-    public void pushEvent(SmsEventEnum smsEventEnum, String message) {
+    public void pushEvent(SmsEventEnum smsEventEnum, Object message) {
         String exchange = "";
         String routingKey = "";
         switch (smsEventEnum) {
             case SEND_SMS:
-                exchange = rabbitmqExchangeTopicLogName;
-                routingKey = "log.sms.send";
+                exchange = rabbitmqExchangeDirectSendName;
+                routingKey = "send";
                 break;
             case SEND_SMS_TRUE:
                 exchange = rabbitmqExchangeTopicLogName;
                 routingKey = "log.sms.send.true";
                 break;
             case SEND_SMS_FALSE:
-                exchange = rabbitmqExchangeDirectRetrieveName;
-                routingKey = "retrieve";
+                exchange = rabbitmqExchangeTopicRetrieveName;
+                routingKey = "retrieve.send";
                 break;
             default:
                 break;
@@ -333,11 +360,49 @@ public class SmsConfig implements ApplicationContextAware {
     }
 
     public void rabbitmqQueueLogNameListener(){
+    }
 
+    /**
+     * messageListenerSendSms
+     *
+     * @param message
+     */
+    private SmsEventEnum messageListenerSendSms(Message message) throws NoSuchMethodException {
+        // 短信发送的重试次数小于 maxCount
+        int count = getSmsRetrieveCount(message);
+        if(smsRetrieveMaxCount <= count) {
+            return SmsEventEnum.SEND_SMS_FALSE_RETRIEVE_MAX_COUNT;
+        }
+        SmsRequestClient smsRequestClient = applicationContext.getBean(SmsRequestClient.class);
+        AliSmsNoticeDTO aliSmsNoticeDTO = SimpleConverter.convert(message, AliSmsNoticeDTO.class);
+        try{
+            smsRequestClient.sendSmsNotice(SmsEnum.Valid_Code_Sms_01, aliSmsNoticeDTO);
+            return SmsEventEnum.SEND_SMS_TRUE;
+        }catch(Exception ex){
+            if(smsRetrieveMaxCount > count){
+
+            }
+            return SmsEventEnum.SEND_SMS_FALSE;
+        }
+    }
+
+    /**
+     * 短信发送的重试次数
+     *
+     * @param message
+     * @return
+     */
+    private int getSmsRetrieveCount(Message message) {
+        return 0;
     }
 
     /**
      * messageListener
+     *
+     * @param channel
+     * @param consumerQueue
+     * @param deliveryTag
+     * @param message
      */
     public void messageListener(Channel channel, String consumerQueue, long deliveryTag, Message message) throws Exception {
         // rabbitmqQueueLogName
@@ -347,9 +412,28 @@ public class SmsConfig implements ApplicationContextAware {
         // rabbitmqQueueQueryName
         if(rabbitmqQueueQueryName.equals(consumerQueue)){
         }
-        // rabbitmqQueueRetrieveName
-        if(rabbitmqQueueRetrieveName.equals(consumerQueue)){
-            throw new Exception("consumerQueue" + message.toString());
+        // rabbitmqQueueSendName
+        if(rabbitmqQueueSendName.equals(consumerQueue)){
+            log.info(rabbitmqQueueSendName + message.toString());
+            SmsEventEnum smsEventEnum = messageListenerSendSms(message);
+            SmsLogTypeEnum smsLogTypeEnum = null;
+            if(smsEventEnum == SmsEventEnum.SEND_SMS_TRUE){
+                smsLogTypeEnum = SmsLogTypeEnum.SMS_SEND_RESULT_TRUE;
+                channel.basicAck(deliveryTag, true);
+            }else if(smsEventEnum == SmsEventEnum.SEND_SMS_FALSE_RETRIEVE){
+                smsLogTypeEnum = SmsLogTypeEnum.SMS_SEND_RETRIEVE;
+                channel.basicNack(deliveryTag, false, true);
+            }else if(smsEventEnum == SmsEventEnum.SEND_SMS_FALSE_RETRIEVE_MAX_COUNT){
+                channel.basicAck(deliveryTag, false);
+                smsLogTypeEnum = SmsLogTypeEnum.SMS_SEND_RESULT_FALSE;
+            }
+            final SmsLogTypeEnum smsLogType = smsLogTypeEnum;
+            getLogList().stream().forEach(v->{
+                v.log(new LogSaveQuery(){{
+                    setDate(new Date());
+                    setSmsLogTypeEnum(smsLogType);
+                }});
+            });
         }
     }
 
@@ -370,7 +454,7 @@ public class SmsConfig implements ApplicationContextAware {
         // simpleMessageListenerContainer
         SimpleMessageListenerContainer simpleMessageListenerContainer = simpleRabbitListenerContainerFactory.createListenerContainer(simpleRabbitListenerEndpoint);
         // setQueueNames
-        simpleMessageListenerContainer.setQueueNames(rabbitmqQueueLogName, rabbitmqQueueQueryName, rabbitmqQueueRetrieveName);
+        simpleMessageListenerContainer.setQueueNames(rabbitmqQueueLogName, rabbitmqQueueQueryName, rabbitmqQueueSendName);
         // setAdviceChain
         simpleMessageListenerContainer.setAdviceChain(retrieve());
         return simpleMessageListenerContainer;
@@ -477,14 +561,6 @@ public class SmsConfig implements ApplicationContextAware {
         this.rabbitmqPassword = rabbitmqPassword;
     }
 
-    public String getRabbitmqExchangeDirectRetrieveName() {
-        return rabbitmqExchangeDirectRetrieveName;
-    }
-
-    public void setRabbitmqExchangeDirectRetrieveName(String rabbitmqExchangeDirectRetrieveName) {
-        this.rabbitmqExchangeDirectRetrieveName = rabbitmqExchangeDirectRetrieveName;
-    }
-
     public String getRabbitmqExchangeDirectQueryName() {
         return rabbitmqExchangeDirectQueryName;
     }
@@ -515,14 +591,6 @@ public class SmsConfig implements ApplicationContextAware {
 
     public void setRabbitmqQueueLogName(String rabbitmqQueueLogName) {
         this.rabbitmqQueueLogName = rabbitmqQueueLogName;
-    }
-
-    public String getRabbitmqQueueRetrieveName() {
-        return rabbitmqQueueRetrieveName;
-    }
-
-    public void setRabbitmqQueueRetrieveName(String rabbitmqQueueRetrieveName) {
-        this.rabbitmqQueueRetrieveName = rabbitmqQueueRetrieveName;
     }
 
     public String getRabbitmqQueueQueryName() {
