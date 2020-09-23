@@ -350,8 +350,6 @@ public class SmsConfig implements ApplicationContextAware {
                             setSmsLogTypeEnum(SmsLogTypeEnum.SMS_SEND_RESULT);
                             setSmsQuery(smsQuery);
                         }}));
-
-                        // todo 短信发送结果
                         boolean smsResult = smsResultData != null;
 
                         // 短信发送异常
@@ -364,7 +362,29 @@ public class SmsConfig implements ApplicationContextAware {
                 }},
                 new ProxyEntry(){{
                     setClazz(SmsUser.class);
-                    setMethod(SmsUser.class.getDeclaredMethod("sendRequestSmsValidCode", SmsEnum.class, AliSmsValidCodeDTO.class, ApplicationContext.class));
+                    setMethod(SmsUser.class.getDeclaredMethod("sendSmsValidCode", SmsEnum.class, AliSmsValidCodeDTO.class));
+                    setProAftAspect((proxyEntry)->{
+                        // 短信发送状态
+                        Map smsResultData = (Map) ((ProxyEntry) proxyEntry).getResultData();
+
+                        log.info("短信发送状态: " + smsResultData);
+                        SmsQuery smsQuery = JSON.parseObject(JSON.toJSONString(smsResultData), SmsQuery.class);
+
+                        // 记录短信发送日志
+                        ((SmsConfig) applicationContext.getBean("smsConfig")).getLogList().stream().forEach(v->v.log(new LogSaveQuery(){{
+                            setDate(new Date());
+                            setSmsLogTypeEnum(SmsLogTypeEnum.SMS_SEND_RESULT);
+                            setSmsQuery(smsQuery);
+                        }}));
+                        boolean smsResult = smsResultData != null && !String.valueOf(smsResultData.get("Message")).contains("invalid");
+
+                        // 短信发送异常
+                        if(!smsResult) {
+                            return SmsEventEnum.SEND_SMS_FALSE;
+                        }else{
+                            return SmsEventEnum.SEND_SMS_TRUE;
+                        }
+                    });
                 }}
             }
         )
@@ -387,14 +407,19 @@ public class SmsConfig implements ApplicationContextAware {
         }
         SmsRequestClient smsRequestClient = applicationContext.getBean(SmsRequestClient.class);
         AliSmsValidCodeDTO aliSmsValidCodeDTO = JSON.parseObject(message.getBody(), AliSmsValidCodeDTO.class);
+        SmsEventEnum smsEventEnum = null;
         try{
-            smsRequestClient.sendSmsValidCode(SmsEnum.Valid_Code_Sms_01, aliSmsValidCodeDTO);
-            return SmsEventEnum.SEND_SMS_TRUE;
+            smsEventEnum = smsRequestClient.sendSmsValidCode(SmsEnum.Valid_Code_Sms_01, aliSmsValidCodeDTO);
         }catch(Exception ex) {
             if(smsRetrieveMaxCount > count) {
                 return SmsEventEnum.SEND_SMS_FALSE_RETRIEVE;
             }
             return SmsEventEnum.SEND_SMS_FALSE;
+        }
+        if(smsEventEnum == SmsEventEnum.SEND_SMS_FALSE && smsRetrieveMaxCount > count){
+            return SmsEventEnum.SEND_SMS_FALSE_RETRIEVE;
+        }else{
+            return smsEventEnum;
         }
     }
 

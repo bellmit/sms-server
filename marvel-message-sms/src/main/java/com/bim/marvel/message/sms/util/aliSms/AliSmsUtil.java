@@ -77,13 +77,12 @@ public class AliSmsUtil {
      * @param smsEnum 短信类型
      * @throws Exception Exception
      */
-    public static String sendAliSmsValidCode(AliSmsValidCodeDTO aliSmsValidCodeDTO, SmsEnum smsEnum) throws Exception {
+    public static Map sendAliSmsValidCode(AliSmsValidCodeDTO aliSmsValidCodeDTO, SmsEnum smsEnum) throws Exception {
         AliSmsQuery aliSmsQuery = AliSmsFactory.getAliSmsQuery(smsEnum);
         aliSmsQuery.setPhoneNumbers(aliSmsValidCodeDTO.getPhoneNumbers());
         aliSmsQuery.setTimestamp(getDate());
         aliSmsQuery.setSignatureNonce(java.util.UUID.randomUUID().toString());
-        sendAliSmsValidCode(aliSmsQuery.getAliSmsConfig(), aliSmsQuery);
-        return null;
+        return sendAliSmsValidCode(aliSmsQuery.getAliSmsConfig(), aliSmsQuery).getBody();
     }
 
     /**
