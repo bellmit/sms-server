@@ -31,12 +31,17 @@ public class SmsSender implements SmsRequestClient {
     }
 
     @Override
+    public <T> T sendSmsValidCode(SmsEnum smsEnum, AliSmsValidCodeDTO aliSmsValidCodeDTO) throws Exception {
+        return null;
+    }
+
+    @Override
     public Long sendRequestSmsNotice(SmsEnum smsEnum, AliSmsNoticeDTO aliSmsNoticeDTO, ApplicationContext applicationContext) throws Exception {
         return null;
     }
 
     @Override
-    public Long sendRequestSmsValidCode(SmsEnum smsEnum, AliSmsValidCodeDTO aliSmsValidCodeDTO) {
+    public Long sendRequestSmsValidCode(SmsEnum smsEnum, AliSmsValidCodeDTO aliSmsValidCodeDTO, ApplicationContext applicationContext) {
         return null;
     }
 }

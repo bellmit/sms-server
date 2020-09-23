@@ -41,7 +41,7 @@ public interface SmsRequestClient {
      * @param aliSmsValidCodeDTO
      * @return
      */
-    Long sendRequestSmsValidCode(SmsEnum smsEnum, AliSmsValidCodeDTO aliSmsValidCodeDTO);
+    Long sendRequestSmsValidCode(SmsEnum smsEnum, AliSmsValidCodeDTO aliSmsValidCodeDTO, ApplicationContext applicationContext);
 
     /**
      * sendSmsNotice
@@ -53,4 +53,14 @@ public interface SmsRequestClient {
      * @throws Exception
      */
     <T> T sendSmsNotice(SmsEnum smsEnum, AliSmsNoticeDTO aliSmsNoticeDTO) throws Exception;
+
+    /**
+     *
+     * @param smsEnum
+     * @param aliSmsValidCodeDTO
+     * @param <T>
+     * @return
+     * @throws Exception
+     */
+    <T> T sendSmsValidCode(SmsEnum smsEnum, AliSmsValidCodeDTO aliSmsValidCodeDTO) throws Exception;
 }

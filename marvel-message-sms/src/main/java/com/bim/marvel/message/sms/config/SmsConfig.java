@@ -364,7 +364,7 @@ public class SmsConfig implements ApplicationContextAware {
                 }},
                 new ProxyEntry(){{
                     setClazz(SmsUser.class);
-                    setMethod(SmsUser.class.getDeclaredMethod("sendRequestSmsValidCode", SmsEnum.class, AliSmsValidCodeDTO.class));
+                    setMethod(SmsUser.class.getDeclaredMethod("sendRequestSmsValidCode", SmsEnum.class, AliSmsValidCodeDTO.class, ApplicationContext.class));
                 }}
             }
         )
@@ -386,9 +386,9 @@ public class SmsConfig implements ApplicationContextAware {
             return SmsEventEnum.SEND_SMS_FALSE_RETRIEVE_MAX_COUNT;
         }
         SmsRequestClient smsRequestClient = applicationContext.getBean(SmsRequestClient.class);
-        AliSmsNoticeDTO aliSmsNoticeDTO = SimpleConverter.convert(message, AliSmsNoticeDTO.class);
+        AliSmsValidCodeDTO aliSmsValidCodeDTO = JSON.parseObject(message.getBody(), AliSmsValidCodeDTO.class);
         try{
-            smsRequestClient.sendSmsNotice(SmsEnum.Valid_Code_Sms_01, aliSmsNoticeDTO);
+            smsRequestClient.sendSmsValidCode(SmsEnum.Valid_Code_Sms_01, aliSmsValidCodeDTO);
             return SmsEventEnum.SEND_SMS_TRUE;
         }catch(Exception ex) {
             if(smsRetrieveMaxCount > count) {
@@ -426,7 +426,7 @@ public class SmsConfig implements ApplicationContextAware {
         }
         // rabbitmqQueueSendName
         if(rabbitmqQueueSendName.equals(consumerQueue)){
-            log.info(rabbitmqQueueSendName + message.toString());
+            log.info(rabbitmqQueueSendName + message.getBody().toString());
             SmsEventEnum smsEventEnum = messageListenerSendSms(message);
             SmsLogTypeEnum smsLogTypeEnum = null;
             if(smsEventEnum == SmsEventEnum.SEND_SMS_TRUE){

@@ -114,8 +114,8 @@ sms:
         topic:
           log: LOG
   alisms:
-    accessKey: accessKey
-    accessSecret: accessSecret
+    accessKeyId: LTAI4G8pzf7uG2dNhB4CkV6q
+    accessSecret: Dzc8ZWxp3RQy2rOloyxhRXdfHjgkXU
     formatters:
-      - { id: 1, signName: 123, templateCode: 123, templateParam: 123, validCodeSize: 4 }
+      - { id: 1, signName: 智慧工地, templateCode: SMS_203180900, templateParam: \"code\":\"1234\"\, validCodeSize: 4 }
       - { id: 2, signName: 123, templateCode: 123, templateParam: 123, validCodeSize: 6 }

@@ -12,15 +12,12 @@ package com.bim.marvel.message.sms.config;
 
 import com.bim.marvel.message.sms.enums.SmsEnum;
 import com.bim.marvel.message.sms.query.AliSmsQuery;
-import com.bim.marvel.message.sms.util.MongodbLog;
-import com.bim.marvel.message.sms.util.SmsLog;
 import com.bim.marvel.message.sms.util.aliSms.AliSmsFactory;
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -43,22 +40,25 @@ public class AliSmsConfig extends SmsConfig implements InitializingBean {
     /**
      * 短信平台
      */
+    @JsonIgnore
     public static final String RESPONSE_CODE = "OK";
 
     /**
      * ALI_SMS_PRODUCT
      */
+    @JsonIgnore
     public static final String ALI_SMS_PRODUCT = "Dysmsapi";
 
     /**
      * ALI_SMS_URL
      */
+    @JsonIgnore
     public static final String ALI_SMS_URL = "http://dysmsapi.aliyuncs.com";
 
     /**
-     * accessKey
+     * accessKeyId
      */
-    private String accessKey;
+    private String accessKeyId;
 
     /**
      * accessSecret
@@ -69,11 +69,6 @@ public class AliSmsConfig extends SmsConfig implements InitializingBean {
      * signatureMethod
      */
     private String signatureMethod = "HMAC-SHA1";
-
-    /**
-     * 短信参数 accessKeyId
-     */
-    private String accessKeyId;
 
     /**
      * 短信参数 signatureVersion
@@ -93,7 +88,7 @@ public class AliSmsConfig extends SmsConfig implements InitializingBean {
     /**
      * 短信参数 format
      */
-    private String format = "json";
+    private String format = "JSON";
 
     /**
      * 短信参数 action
@@ -139,14 +134,6 @@ public class AliSmsConfig extends SmsConfig implements InitializingBean {
 
     public static String getAliSmsUrl() {
         return ALI_SMS_URL;
-    }
-
-    public String getAccessKey() {
-        return accessKey;
-    }
-
-    public void setAccessKey(String accessKey) {
-        this.accessKey = accessKey;
     }
 
     public String getAccessSecret() {

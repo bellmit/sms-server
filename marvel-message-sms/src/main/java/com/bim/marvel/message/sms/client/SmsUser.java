@@ -46,9 +46,32 @@ public class SmsUser implements SmsRequestClient {
         return null;
     }
 
+    /**
+     * sendSmsNotice
+     *
+     * @param smsEnum
+     * @param aliSmsNoticeDTO
+     * @param <T>
+     * @return
+     * @throws Exception
+     */
     @Override
     public <T> T sendSmsNotice(SmsEnum smsEnum, AliSmsNoticeDTO aliSmsNoticeDTO) throws Exception {
         return (T) AliSmsUtil.sendAliSmsNotice(aliSmsNoticeDTO, smsEnum);
+    }
+
+    /**
+     * sendSmsValidCode
+     *
+     * @param smsEnum
+     * @param aliSmsValidCodeDTO
+     * @param <T>
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public <T> T sendSmsValidCode(SmsEnum smsEnum, AliSmsValidCodeDTO aliSmsValidCodeDTO) throws Exception {
+        return (T) AliSmsUtil.sendAliSmsValidCode(aliSmsValidCodeDTO, smsEnum);
     }
 
     /**
@@ -57,7 +80,11 @@ public class SmsUser implements SmsRequestClient {
      * @param smsEnum
      */
     @Override
-    public Long sendRequestSmsValidCode(SmsEnum smsEnum, AliSmsValidCodeDTO aliSmsValidCodeDTO) {
+    public Long sendRequestSmsValidCode(SmsEnum smsEnum, AliSmsValidCodeDTO aliSmsValidCodeDTO, ApplicationContext applicationContext) {
+        if(aliSmsValidCodeDTO == null || StringUtils.isEmpty(aliSmsValidCodeDTO.getPhoneNumbers())){
+            throw new RuntimeException("号码不可为空值");
+        }
+        applicationContext.getBean(AliSmsConfig.class).pushEvent(SmsEventEnum.SEND_SMS, aliSmsValidCodeDTO);
         return null;
     }
 

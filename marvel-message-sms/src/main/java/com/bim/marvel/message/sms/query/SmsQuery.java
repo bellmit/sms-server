@@ -29,4 +29,9 @@ public class SmsQuery {
      * 号码
      */
     private String phone;
+
+    /**
+     * 号码
+     */
+    private String phoneNumbers;
 }
