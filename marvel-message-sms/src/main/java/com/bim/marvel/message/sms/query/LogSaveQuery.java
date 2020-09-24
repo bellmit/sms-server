@@ -34,7 +34,7 @@ public class LogSaveQuery {
     /**
      * date
      */
-    private Date date;
+    private String date;
 
     /**
      * logTypeEnum

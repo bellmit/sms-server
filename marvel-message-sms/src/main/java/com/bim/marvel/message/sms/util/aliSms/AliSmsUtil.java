@@ -193,14 +193,15 @@ public class AliSmsUtil {
         return java.net.URLEncoder.encode(param, "UTF-8").replace("+", "%20").replace("*", "%2A").replace("%7E", "~");
     }
 
+    public static final SimpleDateFormat SIMPLEDATEFORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+
     /**
      * 日期
      *
      * @return String 日期
      */
     private static String getDate() {
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-        simpleDateFormat.setTimeZone(new java.util.SimpleTimeZone(0, "GMT"));
-        return simpleDateFormat.format(new Date());
+        SIMPLEDATEFORMAT.setTimeZone(new java.util.SimpleTimeZone(0, "GMT"));
+        return SIMPLEDATEFORMAT.format(new Date());
     }
 }

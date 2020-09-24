@@ -69,7 +69,7 @@ import org.springframework.retry.listener.RetryListenerSupport;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 import javax.validation.constraints.NotNull;
-import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -159,7 +159,17 @@ public class SmsConfig implements ApplicationContextAware {
     @Value("${sms.retrieve.maxCount}")
     private Integer smsRetrieveMaxCount;
 
+    /**
+     * topicRetrieveExchange
+     */
+    private Exchange topicRetrieveExchange = null;
+
     private static final String _SPLIT = ",";
+
+    /**
+     * SIMPLEDATEFORMAT
+     */
+    public static final SimpleDateFormat SIMPLEDATEFORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
     /**
      * logList
@@ -185,7 +195,7 @@ public class SmsConfig implements ApplicationContextAware {
         }
     }
 
-    protected List<SmsLog> getLogList() {
+    protected static List<SmsLog> getLogList() {
         return logList;
     }
 
@@ -206,20 +216,21 @@ public class SmsConfig implements ApplicationContextAware {
             rabbitAdmin.declareExchange(exchangeQuery);
             Exchange exchangeLog = new TopicExchange(rabbitmqExchangeTopicLogName, false, false);
             rabbitAdmin.declareExchange(exchangeLog);
+            topicRetrieveExchange = ExchangeBuilder.topicExchange(rabbitmqExchangeTopicRetrieveName).durable(false).build();
+            rabbitAdmin.declareExchange(topicRetrieveExchange);
             // declareQueue
             Queue queueLog = new Queue(rabbitmqQueueLogName);
             rabbitAdmin.declareQueue(queueLog);
             Queue queueSend = new Queue(rabbitmqQueueSendName);
-            rabbitAdmin.declareQueue(queueSend);
-            Queue queueRetrieve = declareRetrieveQueue(rabbitmqQueueSendName, rabbitmqExchangeDirectSendName);
+            // rabbitAdmin.declareQueue(queueSend);
+            Queue queueRetrieve = declareRetrieveQueue(rabbitAdmin, queueSend, rabbitmqQueueSendName, rabbitmqExchangeDirectSendName);
             rabbitAdmin.declareQueue(queueRetrieve);
             Queue queueQuery = new Queue(rabbitmqQueueQueryName);
             rabbitAdmin.declareQueue(queueQuery);
             // declareBinding
             rabbitAdmin.declareBinding(BindingBuilder.bind(queueSend).to(exchangeSend).with("send").noargs());
-            rabbitAdmin.declareBinding(BindingBuilder.bind(queueLog).to(exchangeQuery).with("query").noargs());
+            // rabbitAdmin.declareBinding(BindingBuilder.bind(queueLog).to(exchangeQuery).with("query").noargs());
             rabbitAdmin.declareBinding(BindingBuilder.bind(queueLog).to(exchangeLog).with("log.#").noargs());
-            rabbitAdmin.declareBinding(BindingBuilder.bind(queueRetrieve).to(exchangeSend).with("log.#").noargs());
             // rabbitAdmin
             return rabbitAdmin;
         }catch(Exception ex){
@@ -229,11 +240,16 @@ public class SmsConfig implements ApplicationContextAware {
         }
     }
 
-    public Queue declareRetrieveQueue(String queueName, String exchangeName) {
-        return new Queue(queueName + "RetrieveQueue", true, false, false, new HashMap(){{
+    public Queue declareRetrieveQueue(RabbitAdmin rabbitAdmin, Queue queue, String queueName, String exchangeName) {
+        queue.addArgument("x-dead-letter-exchange", rabbitmqExchangeTopicRetrieveName);
+        rabbitAdmin.declareQueue(queue);
+        Queue retrieveQueue = new Queue(queueName + "RetrieveQueue", true, false, false, new HashMap(){{
             put("x-dead-letter-exchange", exchangeName);
             put("x-message-ttl", 10000);
         }});
+        rabbitAdmin.declareQueue(retrieveQueue);
+        rabbitAdmin.declareBinding(BindingBuilder.bind(retrieveQueue).to(topicRetrieveExchange).with("send").noargs());
+        return retrieveQueue;
     }
 
     private void getExchange(String exchangeName){
@@ -345,11 +361,12 @@ public class SmsConfig implements ApplicationContextAware {
                         log.info("短信发送状态: " + smsResultData);
                         SmsQuery smsQuery = JSON.parseObject(JSON.toJSONString(((ProxyEntry) proxyEntry).getArgs()), SmsQuery.class);
                         // 记录短信发送日志
-                        ((SmsConfig) applicationContext.getBean("smsConfig")).getLogList().stream().forEach(v->v.log(new LogSaveQuery(){{
-                            setDate(new Date());
-                            setSmsLogTypeEnum(SmsLogTypeEnum.SMS_SEND_RESULT);
+                        final LogSaveQuery logSaveQuery = new LogSaveQuery(){{
+                            setDate(SIMPLEDATEFORMAT.format(Calendar.getInstance().getTime()));
+                            // setSmsLogTypeEnum(SmsLogTypeEnum.SMS_SEND_RESULT);
                             setSmsQuery(JSON.toJSONString(((ProxyEntry) proxyEntry).getArgs()));
-                        }}));
+                        }};
+                        // ((SmsConfig) applicationContext.getBean("smsConfig")).getLogList().stream().forEach(v->v.log(logSaveQuery));
                         boolean smsResult = smsResultData != null;
 
                         // 短信发送异常
@@ -367,13 +384,12 @@ public class SmsConfig implements ApplicationContextAware {
                         // 短信发送状态
                         Map smsResultData = (Map) ((ProxyEntry) proxyEntry).getResultData();
                         log.info("短信发送状态: " + smsResultData);
-                        SmsQuery smsQuery = JSON.parseObject(JSON.toJSONString(((ProxyEntry) proxyEntry).getArgs()), SmsQuery.class);
                         // 记录短信发送日志
-                        ((SmsConfig) applicationContext.getBean("smsConfig")).getLogList().stream().forEach(v->v.log(new LogSaveQuery(){{
-                            setDate(new Date());
-                            setSmsLogTypeEnum(SmsLogTypeEnum.SMS_SEND_RESULT);
-                            setSmsQuery(JSON.toJSONString(((ProxyEntry) proxyEntry).getArgs()));
-                        }}));
+                        getLogList().stream().forEach(v->v.log(new LogSaveQuery(
+                                SIMPLEDATEFORMAT.format(Calendar.getInstance().getTime()),
+                                SmsLogTypeEnum.SMS_SEND_RESULT,
+                                JSON.toJSONString(smsResultData))));
+                        // smsResult
                         boolean smsResult = smsResultData != null && !String.valueOf(smsResultData.get("Message")).contains("invalid");
                         // 短信发送异常
                         if(!smsResult) {
@@ -427,7 +443,7 @@ public class SmsConfig implements ApplicationContextAware {
      * @return
      */
     private int getSmsRetrieveCount(Message message) {
-        return 0;
+        return message.getMessageProperties().getXDeathHeader() == null ? 0 : message.getMessageProperties().getXDeathHeader().size();
     }
 
     /**
@@ -453,10 +469,10 @@ public class SmsConfig implements ApplicationContextAware {
             SmsLogTypeEnum smsLogTypeEnum = null;
             if(smsEventEnum == SmsEventEnum.SEND_SMS_TRUE){
                 smsLogTypeEnum = SmsLogTypeEnum.SMS_SEND_RESULT_TRUE;
-                channel.basicAck(deliveryTag, true);
+                channel.basicAck(deliveryTag, false);
             }else if(smsEventEnum == SmsEventEnum.SEND_SMS_FALSE_RETRIEVE){
                 smsLogTypeEnum = SmsLogTypeEnum.SMS_SEND_RETRIEVE;
-                channel.basicNack(deliveryTag, false, true);
+                channel.basicNack(deliveryTag, false, false);
             }else if(smsEventEnum == SmsEventEnum.SEND_SMS_FALSE_RETRIEVE_MAX_COUNT){
                 channel.basicAck(deliveryTag, false);
                 smsLogTypeEnum = SmsLogTypeEnum.SMS_SEND_RESULT_FALSE;
@@ -464,10 +480,11 @@ public class SmsConfig implements ApplicationContextAware {
             final SmsLogTypeEnum smsLogType = smsLogTypeEnum;
             // 保存短信发送日志
             getLogList().stream().forEach(v->{
-                v.log(new LogSaveQuery(){{
-                    setDate(new Date());
-                    setSmsLogTypeEnum(smsLogType);
-                }});
+                v.log(new LogSaveQuery(
+                        SIMPLEDATEFORMAT.format(Calendar.getInstance().getTime()),
+                        smsLogType,
+                        JSON.toJSONString(message)
+                ));
             });
         }
     }
@@ -499,8 +516,8 @@ public class SmsConfig implements ApplicationContextAware {
         RetryTemplate retryTemplate = new RetryTemplate();
         retryTemplate.setRetryPolicy(new SimpleRetryPolicy(2));
         retryTemplate.setBackOffPolicy(new ExponentialBackOffPolicy(){{
-            setInitialInterval(1000);
-            setMaxInterval(10 * 1000L);
+            setInitialInterval(10000);
+            setMaxInterval(100 * 1000L);
             setMultiplier(2);
         }});
         retryTemplate.registerListener(new RetryListenerSupport() {

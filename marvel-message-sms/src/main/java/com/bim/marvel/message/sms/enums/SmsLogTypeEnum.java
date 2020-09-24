@@ -53,4 +53,28 @@ public enum SmsLogTypeEnum {
         this.value = value;
         this.desc = desc;
     }
+
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
+    }
+
+    public String getDesc() {
+        return desc;
+    }
+
+    public void setDesc(String desc) {
+        this.desc = desc;
+    }
+
+    @Override
+    public String toString() {
+        return "SmsLogTypeEnum{" +
+                "value='" + value + '\'' +
+                ", desc='" + desc + '\'' +
+                '}';
+    }
 }
