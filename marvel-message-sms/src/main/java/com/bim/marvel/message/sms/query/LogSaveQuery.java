@@ -44,5 +44,5 @@ public class LogSaveQuery {
     /**
      * smsQuery
      */
-    private SmsQuery smsQuery;
+    private String smsQuery;
 }

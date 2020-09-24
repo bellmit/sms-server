@@ -11,6 +11,7 @@
 package com.bim.marvel.message.sms.config;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.bim.marvel.common.util.SimpleConverter;
 import com.bim.marvel.message.sms.client.SmsRequestClient;
@@ -342,13 +343,12 @@ public class SmsConfig implements ApplicationContextAware {
                         String smsResultData = (String) ((ProxyEntry) proxyEntry).getResultData();
 
                         log.info("短信发送状态: " + smsResultData);
-                        SmsQuery smsQuery = JSON.parseObject(smsResultData, SmsQuery.class);
-
+                        SmsQuery smsQuery = JSON.parseObject(JSON.toJSONString(((ProxyEntry) proxyEntry).getArgs()), SmsQuery.class);
                         // 记录短信发送日志
                         ((SmsConfig) applicationContext.getBean("smsConfig")).getLogList().stream().forEach(v->v.log(new LogSaveQuery(){{
                             setDate(new Date());
                             setSmsLogTypeEnum(SmsLogTypeEnum.SMS_SEND_RESULT);
-                            setSmsQuery(smsQuery);
+                            setSmsQuery(JSON.toJSONString(((ProxyEntry) proxyEntry).getArgs()));
                         }}));
                         boolean smsResult = smsResultData != null;
 
@@ -366,18 +366,15 @@ public class SmsConfig implements ApplicationContextAware {
                     setProAftAspect((proxyEntry)->{
                         // 短信发送状态
                         Map smsResultData = (Map) ((ProxyEntry) proxyEntry).getResultData();
-
                         log.info("短信发送状态: " + smsResultData);
-                        SmsQuery smsQuery = JSON.parseObject(JSON.toJSONString(smsResultData), SmsQuery.class);
-
+                        SmsQuery smsQuery = JSON.parseObject(JSON.toJSONString(((ProxyEntry) proxyEntry).getArgs()), SmsQuery.class);
                         // 记录短信发送日志
                         ((SmsConfig) applicationContext.getBean("smsConfig")).getLogList().stream().forEach(v->v.log(new LogSaveQuery(){{
                             setDate(new Date());
                             setSmsLogTypeEnum(SmsLogTypeEnum.SMS_SEND_RESULT);
-                            setSmsQuery(smsQuery);
+                            setSmsQuery(JSON.toJSONString(((ProxyEntry) proxyEntry).getArgs()));
                         }}));
                         boolean smsResult = smsResultData != null && !String.valueOf(smsResultData.get("Message")).contains("invalid");
-
                         // 短信发送异常
                         if(!smsResult) {
                             return SmsEventEnum.SEND_SMS_FALSE;
@@ -391,7 +388,7 @@ public class SmsConfig implements ApplicationContextAware {
         .genProxy();
     }
 
-    public void rabbitmqQueueLogNameListener(){
+    public void rabbitmqQueueLogNameListener() {
     }
 
     /**
