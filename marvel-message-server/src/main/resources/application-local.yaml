@@ -52,6 +52,7 @@ logging:
   level:
     root: INFO
     com.bim.marvel.data.config.datasource: DEBUG
+  config: classpath:logback-spring.xml
 
 feign:
   client:
