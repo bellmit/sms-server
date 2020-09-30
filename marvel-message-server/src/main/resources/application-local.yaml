@@ -52,7 +52,7 @@ logging:
   level:
     root: INFO
     com.bim.marvel.data.config.datasource: DEBUG
-  config: classpath:logback-spring.xml
+#  config: classpath:logback-spring.xml
 
 feign:
   client:
@@ -120,3 +120,25 @@ sms:
     formatters:
       - { id: 1, signName: 智慧工地, templateCode: SMS_203180900, templateParam: \"code\":\"1234\"\, validCodeSize: 4 }
       - { id: 2, signName: 123, templateCode: 123, templateParam: 123, validCodeSize: 6 }
+
+spring:
+  datasource:
+    driverClassName: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/middle?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: 123456
+#  datasource:
+#    driverClassName: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://122.51.184.243:3306/auth_server?useSSL=false&allowPublicKeyRetrieval=true
+#    username: auth_server_admin
+#    password: 123456
+  flyway:
+    enabled: false
+    url: jdbc:mysql://localhost:3306/middle?useUnicode=true&characterEncoding=utf-8
+    encoding: UTF-8
+    user: root
+    password: Ytsy3113678AB
+    clean-disabled: false
+    schemas: middle
+    baseline-on-migrate: true
+

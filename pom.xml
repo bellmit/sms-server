@@ -67,6 +67,7 @@
         <module>marvel-message-sms</module>
         <module>marvel-message-test</module>
         <module>marvel-message-server</module>
+        <module>marvel-message-cent</module>
     </modules>
     <dependencyManagement>
         <dependencies>
@@ -99,6 +100,11 @@
             <dependency>
                 <groupId>com.bim.marvel</groupId>
                 <artifactId>marvel-message-sms</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.bim.marvel</groupId>
+                <artifactId>marvel-message-cent</artifactId>
                 <version>${project.version}</version>
             </dependency>
               <dependency>
@@ -222,10 +228,27 @@
                 <artifactId>spring-boot-starter-amqp</artifactId>
                 <version>${spring.cloud.starter.version}</version>
             </dependency>
+            <!--spring-cloud-starter-sleuth-->
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-starter-sleuth</artifactId>
                 <version>${spring.cloud.starter.version}</version>
+            </dependency>
+            <!--mybatis plus-->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-boot-starter</artifactId>
+                <version>${mybatisplus-boot-starter.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>druid-spring-boot-starter</artifactId>
+                <version>${druid.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>${mysql-connector-java.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

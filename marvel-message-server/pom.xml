@@ -13,6 +13,13 @@
     <name>${project.artifactId}</name>
     <packaging>jar</packaging>
 
+    <properties>
+        <maven_spring.profiles.active>local</maven_spring.profiles.active>
+        <maven_docker.ip>122.51.184.243</maven_docker.ip>
+        <maven_nacos.ip>127.0.0.1</maven_nacos.ip>
+        <maven_nacos.port>8848</maven_nacos.port>
+    </properties>
+
     <dependencies>
         <!--marvel-->
         <dependency>
@@ -26,6 +33,14 @@
         <dependency>
             <groupId>com.bim.marvel</groupId>
             <artifactId>marvel-message-sms</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.bim.marvel</groupId>
+            <artifactId>marvel-message-dingtalk</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.bim.marvel</groupId>
+            <artifactId>marvel-message-cent</artifactId>
         </dependency>
         <!--web-->
         <dependency>
@@ -115,6 +130,10 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-sleuth</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
         </dependency>
     </dependencies>
 
